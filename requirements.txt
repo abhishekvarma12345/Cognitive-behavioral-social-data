@@ -1,0 +1,7 @@
+certifi @ file:///C:/b/abs_ac29jvt43w/croot/certifi_1665076682579/work/certifi
+numpy==1.23.4
+pandas==1.5.1
+python-dateutil==2.8.2
+pytz==2022.5
+six==1.16.0
+wincertstore==0.2

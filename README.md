@@ -14,5 +14,5 @@ conda activate ./venv
 
 3. To install the requirements of the project
 ```bash
-pip install -r requirements
+pip install -r requirements.txt
 ```

@@ -1,5 +1,6 @@
 import os
-from feature_selection.data_mngt import read_data
+from feature_selection.data_mngt import read_data, split_data
+from feature_selection.data_preprocessing import imbalance_check
 
 ## follow PEP8 standards 
 # Class names must be camelcase (Ex: DataManagement)
@@ -11,4 +12,5 @@ if __name__ == '__main__':
     filename = "PHQ9_GAD7_df.csv"
     file_path = os.path.join(datasets_dir, folder_name, filename)
     df = read_data(file_path)
-    
+
+    print("imbalanced classes:",imbalance_check(df))

@@ -14,3 +14,7 @@ if __name__ == '__main__':
     df = read_data(file_path)
 
     print("imbalanced classes:",imbalance_check(df))
+
+    X_train, X_test, y_train, y_test = split_data(df, threshold=0.8)
+
+    

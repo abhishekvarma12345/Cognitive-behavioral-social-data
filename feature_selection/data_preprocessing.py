@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 def imbalance_check(data:pd.DataFrame):
     class_count = data['CONDITION'].value_counts()
@@ -10,9 +10,19 @@ def imbalance_check(data:pd.DataFrame):
     else:
         return True
 
-    
+def scale_data(train, test, scaler=None):
+    if scaler == None:
+        scaler = StandardScaler()
+    else:
+        scaler = MinMaxScaler()
+    train_data = pd.DataFrame(scaler.fit_transform(train), columns=list(train.columns))
+    test_data = pd.DataFrame(scaler.transform(test), columns=list(train.columns))
+    return train_data, test_data
 
-def scale_data(data:pd.DataFrame)->pd.DataFrame:
-    pass
+def label_encoding(y):
+    return y.replace({'H':1, 'D':0})
+
+
+
 
 

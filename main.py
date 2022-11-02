@@ -30,28 +30,28 @@ if __name__ == '__main__':
     assert y_train.value_counts().loc['H'] == y_train_encoded.value_counts().loc[1]
 
     # model training for feature selection
-    plot_dtree = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded)
+    plot_dtree = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, folder_name)
     print("end of decision tree".center(50,"*"))
 
-    plot_rforest = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded)
+    plot_rforest = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, folder_name)
     print("end of random forest".center(50,'*'))
 
-    plot_xgboost = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded)
+    plot_xgboost = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, folder_name)
     print("end of xgboost".center(50,'*'))
 
-    plot_perm = perm_knn(X_train_scaled, y_train_encoded)
+    plot_perm = perm_knn(X_train_scaled, y_train_encoded, folder_name)
     print("end of permutation importances with knn".center(50,'*'))
 
-    plot_chi2 = chi_2(X_train, y_train_encoded, X_test)
+    plot_chi2 = chi_2(X_train, y_train_encoded, X_test, folder_name)
     print("end of chi2 feature selection".center(50,'*'))
 
-    plot_mutualinf = mutual_inf(X_train, y_train_encoded, X_test)
+    plot_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, folder_name)
     print("end of mutual information feature selection".center(50,'*'))
 
-    categorical_corr(df)
+    categorical_corr(df, folder_name)
     print("end of categorical correlation study".center(50,'*'))
 
-    unc_coeff(df)
+    unc_coeff(df, folder_name)
     print("end of uncertainty coefficients study".center(50,'*'))
 
     # Merge all different plots in one figure and save it

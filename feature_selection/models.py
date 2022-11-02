@@ -5,7 +5,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.decomposition import PCA
-from sklearn.linear_model import LassoCV
+from sklearn import metrics
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.inspection import permutation_importance
@@ -15,43 +15,72 @@ from sklearn.feature_selection import SelectFromModel
 import pandas as pd
 import numpy as np
 from itertools import combinations
-import matplotlib.pyplot as plt
 
 
-def dtree(X, y, action=None):
+def dtree(X, y, X_test, y_test, action=None):
     # define the model
     model = DecisionTreeClassifier()
     # fit the model
     model.fit(X, y)
+    # predict
+    y_pred = model.predict(X_test)
+    # Print metrics
+    print("Decision tree metrics: ")
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    print("Roc_auc:", metrics.roc_auc_score(y_test, y_pred))
+    print("F1:", metrics.f1_score(y_test, y_pred))
+    print("Precision:", metrics.precision_score(y_test, y_pred))
+    print("Recall:", metrics.recall_score(y_test, y_pred))
     # get importance
     importance = model.feature_importances_
     # summarize feature importance
+    print("Feature importance: ")
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
     dtree_plot = save_plot(X.columns, importance, 'dtree.png')
     return dtree_plot
 
-def rforest(X, y, action=None):
+def rforest(X, y, X_test, y_test, action=None):
 
     model = RandomForestClassifier()
     # fit the model
     model.fit(X, y)
+    # predict
+    y_pred = model.predict(X_test)
+    # Print metrics
+    print("Random forest metrics: ")
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    print("Roc_auc:", metrics.roc_auc_score(y_test, y_pred))
+    print("F1:", metrics.f1_score(y_test, y_pred))
+    print("Precision:", metrics.precision_score(y_test, y_pred))
+    print("Recall:", metrics.recall_score(y_test, y_pred))
     # get importance
     importance = model.feature_importances_
     # summarize feature importance
+    print("Feature importance: ")
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
     rforest_plot = save_plot(X.columns, importance, 'rforest.png')
     return rforest_plot
 
-def xgboost(X, y, action=None):
+def xgboost(X, y, X_test, y_test, action=None):
     # define the model
     model = XGBClassifier()
     # fit the model
     model.fit(X, y)
+    # predict
+    y_pred = model.predict(X_test)
+    # Print metrics
+    print("Random forest metrics: ")
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    print("Roc_auc:", metrics.roc_auc_score(y_test, y_pred))
+    print("F1:", metrics.f1_score(y_test, y_pred))
+    print("Precision:", metrics.precision_score(y_test, y_pred))
+    print("Recall:", metrics.recall_score(y_test, y_pred))
     # get importance
     importance = model.feature_importances_
     # summarize feature importance
+    print("Feature importance: ")
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
     xgboost_plot = save_plot(X.columns, importance, 'xgboost.png')

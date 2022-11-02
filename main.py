@@ -30,13 +30,13 @@ if __name__ == '__main__':
     assert y_train.value_counts().loc['H'] == y_train_encoded.value_counts().loc[1]
 
     # model training for feature selection
-    plot_dtree = dtree(X_train_scaled, y_train_encoded)
+    plot_dtree = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded)
     print("end of decision tree".center(50,"*"))
 
-    plot_rforest = rforest(X_train_scaled, y_train_encoded)
+    plot_rforest = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded)
     print("end of random forest".center(50,'*'))
 
-    plot_xgboost = xgboost(X_train_scaled, y_train_encoded)
+    plot_xgboost = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded)
     print("end of xgboost".center(50,'*'))
 
     plot_perm = perm_knn(X_train_scaled, y_train_encoded)

@@ -9,12 +9,12 @@ import seaborn as sns
 
 
 
-def save_plot(columns, feature_importances, filename):
+def save_plot(columns, feature_importances, filename, folder_name):
     fig = plt.figure(figsize=(15,10))
     plt.bar(columns, feature_importances)
     plt.xlabel("features")
     plt.ylabel("feature importance")
-    plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', filename))
+    plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name, filename))
     return fig
 
 #def merge_plots(plot_1, plot_2, plot_3, filename):
@@ -57,7 +57,7 @@ def theils_u(x, y):
     else:
         return (s_x - s_xy) / s_x
 
-def save_plot_sns(corr, filename):
+def save_plot_sns(corr, filename, folder_name):
     fig, ax = plt.subplots(figsize=(12, 10))
     ax = sns.heatmap(corr, annot=True, ax=ax)
-    plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', filename))
+    plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name, filename))

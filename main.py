@@ -4,6 +4,7 @@ from feature_selection.data_preprocessing import imbalance_check, label_encoding
 from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff
 from feature_selection.utils import princ_comp_anal
 #from feature_selection.utils import merge_plots
+from feature_selection.utils import make_timestamp_dir
 
 ## follow PEP8 standards 
 # Class names must be camelcase (Ex: DataManagement)
@@ -22,6 +23,9 @@ if __name__ == '__main__':
     file_path = os.path.join(datasets_dir, folder_name, filename)
     df = read_data(file_path)
 
+    # Make a time stamp directory where storing the plots
+    mydir = make_timestamp_dir(folder_name)
+
     # checking for class imbalance
     print("Imbalanced classes:",imbalance_check(df))
 
@@ -37,32 +41,32 @@ if __name__ == '__main__':
     assert y_train.value_counts().loc['H'] == y_train_encoded.value_counts().loc[1]
 
     # model training for feature selection
-    plot_dtree = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, folder_name)
+    plot_dtree = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir)
     print("end of decision tree".center(50,"*"))
 
-    plot_rforest = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, folder_name)
+    plot_rforest = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir)
     print("end of random forest".center(50,'*'))
 
-    plot_xgboost = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, folder_name)
+    plot_xgboost = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir)
     print("end of xgboost".center(50,'*'))
 
-    plot_perm = perm_knn(X_train_scaled, y_train_encoded, folder_name)
+    plot_perm = perm_knn(X_train_scaled, y_train_encoded, mydir)
     print("end of permutation importances with knn".center(50,'*'))
 
-    plot_chi2 = chi_2(X_train, y_train_encoded, X_test, folder_name)
+    plot_chi2 = chi_2(X_train, y_train_encoded, X_test, mydir)
     print("end of chi2 feature selection".center(50,'*'))
 
-    plot_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, folder_name)
+    plot_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, mydir)
     print("end of mutual information feature selection".center(50,'*'))
 
-    categorical_corr(df, folder_name)
+    categorical_corr(df, mydir)
     print("end of categorical correlation study".center(50,'*'))
 
-    unc_coeff(df, folder_name)
+    unc_coeff(df, mydir)
     print("end of uncertainty coefficients study".center(50,'*'))
 
     print("Start reduction of dimensionality using PCA".center(50,'*'))
-    X_pca = princ_comp_anal(X_train_scaled, folder_name)
+    X_pca = princ_comp_anal(X_train_scaled, mydir)
 
     # Merge all different plots in one figure and save it
     #merge_plots(plot_dtree, plot_rforest, plot_xgboost, filename)

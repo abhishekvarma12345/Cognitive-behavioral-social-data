@@ -1,4 +1,4 @@
-import os
+import os, datetime
 import matplotlib.pyplot as plt
 from sklearn.feature_selection import SelectKBest
 import scipy.stats as ss
@@ -8,14 +8,20 @@ from dython.nominal import Counter
 import seaborn as sns
 from sklearn.decomposition import PCA
 
+def make_timestamp_dir(folder_name):
+    mydir = os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name,
+                         datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+    if os.path.exists(mydir) == False:
+        os.makedirs(mydir)
+        
+    return mydir
 
-
-def save_plot(columns, feature_importances, filename, folder_name):
+def save_plot(columns, feature_importances, filename, dir):
     fig = plt.figure(figsize=(15,10))
     plt.bar(columns, feature_importances)
     plt.xlabel("features")
     plt.ylabel("feature importance")
-    plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name, filename))
+    plt.savefig(os.path.join(dir, filename))
     return fig
 
 #def merge_plots(plot_1, plot_2, plot_3, filename):

@@ -2,6 +2,7 @@ import os
 from feature_selection.data_mngt import read_data, split_data
 from feature_selection.data_preprocessing import imbalance_check, label_encoding, scale_data
 from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff
+from feature_selection.utils import princ_comp_anal
 #from feature_selection.utils import merge_plots
 
 ## follow PEP8 standards 
@@ -16,8 +17,8 @@ if __name__ == '__main__':
                        ("11. DDDT", "RAW_DDDT.CSV"),("12. IADQ", "IADQ_df.csv"),("13. BF_1", "BF_df_CTU.csv"), 
                        ("13. BF_2", "BF_df_OU.csv"), ("13. BF_3", "BF_df_V.csv")]
     datasets_dir = os.path.join(os.getcwd(), 'Datasets')
-    folder_name = folders_and_files[11][0]
-    filename = folders_and_files[11][1]
+    folder_name = folders_and_files[5][0]
+    filename = folders_and_files[5][1]
     file_path = os.path.join(datasets_dir, folder_name, filename)
     df = read_data(file_path)
 
@@ -59,6 +60,9 @@ if __name__ == '__main__':
 
     unc_coeff(df, folder_name)
     print("end of uncertainty coefficients study".center(50,'*'))
+
+    print("Start reduction of dimensionality using PCA".center(50,'*'))
+    X_pca = princ_comp_anal(X_train_scaled, folder_name)
 
     # Merge all different plots in one figure and save it
     #merge_plots(plot_dtree, plot_rforest, plot_xgboost, filename)

@@ -17,7 +17,7 @@ import numpy as np
 from itertools import combinations
 
 
-def dtree(X, y, X_test, y_test, folder_name, action=None):
+def dtree(X, y, X_test, y_test, dir, action=None):
     # define the model
     model = DecisionTreeClassifier()
     # fit the model
@@ -37,10 +37,10 @@ def dtree(X, y, X_test, y_test, folder_name, action=None):
     print("Feature importance: ")
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
-    dtree_plot = save_plot(X.columns, importance, 'dtree.png', folder_name)
+    dtree_plot = save_plot(X.columns, importance, 'dtree.png', dir)
     return dtree_plot
 
-def rforest(X, y, X_test, y_test, folder_name, action=None):
+def rforest(X, y, X_test, y_test, dir, action=None):
 
     model = RandomForestClassifier()
     # fit the model
@@ -60,10 +60,10 @@ def rforest(X, y, X_test, y_test, folder_name, action=None):
     print("Feature importance: ")
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
-    rforest_plot = save_plot(X.columns, importance, 'rforest.png', folder_name)
+    rforest_plot = save_plot(X.columns, importance, 'rforest.png', dir)
     return rforest_plot
 
-def xgboost(X, y, X_test, y_test, folder_name, action=None):
+def xgboost(X, y, X_test, y_test, dir, action=None):
     # define the model
     model = XGBClassifier()
     # fit the model
@@ -83,11 +83,11 @@ def xgboost(X, y, X_test, y_test, folder_name, action=None):
     print("Feature importance: ")
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
-    xgboost_plot = save_plot(X.columns, importance, 'xgboost.png', folder_name)
+    xgboost_plot = save_plot(X.columns, importance, 'xgboost.png', dir)
     return xgboost_plot
 
 
-def perm_knn(X,y, folder_name, action = None):
+def perm_knn(X,y, dir, action = None):
     # define the model
     model = KNeighborsClassifier()
     # fit the model
@@ -100,31 +100,31 @@ def perm_knn(X,y, folder_name, action = None):
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
     # plot feature importance
-    perm_plot = save_plot(X.columns, importance, 'perm_knn.png', folder_name)
+    perm_plot = save_plot(X.columns, importance, 'perm_knn.png', dir)
     return perm_plot 
 
  
-def chi_2(X_train, y_train, X_test, folder_name):
+def chi_2(X_train, y_train, X_test, dir):
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, chi2)
     # what are scores for the features
     for i in range(len(fs.scores_)):
         print('Feature %d: %f' % (i, fs.scores_[i]))
     # plot the scores
-    chi2_plot = save_plot(X_train.columns, fs.scores_, 'chi_2.png', folder_name)
+    chi2_plot = save_plot(X_train.columns, fs.scores_, 'chi_2.png', dir)
 
 
-def mutual_inf(X_train, y_train, X_test, folder_name):
+def mutual_inf(X_train, y_train, X_test, dir):
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, mutual_info_classif)
     # what are scores for the features
     for i in range(len(fs.scores_)):
         print('Feature %d: %f' % (i, fs.scores_[i]))
     # plot the scores
-    mutualinf_plot = save_plot(X_train.columns, fs.scores_, 'mutual_inf.png', folder_name)
+    mutualinf_plot = save_plot(X_train.columns, fs.scores_, 'mutual_inf.png', dir)
 
 
-def categorical_corr(df, folder_name):
+def categorical_corr(df, dir):
     cols = df.columns
     corrM = np.zeros((len(cols),len(cols)))
     for col1, col2 in combinations(cols, 2):
@@ -133,10 +133,10 @@ def categorical_corr(df, folder_name):
         corrM[idx2, idx1] = corrM[idx1, idx2]
 
     corr = pd.DataFrame(corrM, index=cols, columns=cols)
-    save_plot_sns(corr, 'categorical_correlation.png', folder_name)
+    save_plot_sns(corr, 'categorical_correlation.png', dir)
 
 
-def unc_coeff(df, folder_name):
+def unc_coeff(df, dir):
     cols = df.columns
     corrM = np.zeros((len(cols),len(cols)))
     for col1, col2 in combinations(cols, 2):
@@ -145,7 +145,7 @@ def unc_coeff(df, folder_name):
         corrM[idx2, idx1] = corrM[idx1, idx2]
 
     corr = pd.DataFrame(corrM, index=cols, columns=cols)
-    save_plot_sns(corr, 'uncertainty_coefficients.png', folder_name)
+    save_plot_sns(corr, 'uncertainty_coefficients.png', dir)
 
     
 

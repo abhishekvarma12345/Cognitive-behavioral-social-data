@@ -13,7 +13,7 @@ def make_timestamp_dir(folder_name):
                          datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
     if os.path.exists(mydir) == False:
         os.makedirs(mydir)
-        
+
     return mydir
 
 def save_plot(columns, feature_importances, filename, dir):
@@ -64,18 +64,19 @@ def theils_u(x, y):
     else:
         return (s_x - s_xy) / s_x
 
-def save_plot_sns(corr, filename, folder_name):
+def save_plot_sns(corr, filename, dir):
     fig, ax = plt.subplots(figsize=(12, 10))
     ax = sns.heatmap(corr, annot=True, ax=ax)
-    plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name, filename))
+    plt.savefig(os.path.join(dir, filename))
 
 
-def princ_comp_anal(X, folder_name):
+def princ_comp_anal(X, dir):
     pca = PCA().fit(X)
+    fig = plt.figure(figsize=(15,10))
     plt.plot(np.cumsum(pca.explained_variance_ratio_))
     plt.xlabel('Number of components')
     plt.ylabel('Cumulative explained variance')
-    plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name, "pca.png"))
+    plt.savefig(os.path.join(dir, "pca.png"))
  
     principal = PCA(n_components=2)
     principal.fit(X)

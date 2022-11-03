@@ -6,6 +6,7 @@ import numpy as np
 from dython.nominal import conditional_entropy
 from dython.nominal import Counter
 import seaborn as sns
+from sklearn.decomposition import PCA
 
 
 
@@ -61,3 +62,20 @@ def save_plot_sns(corr, filename, folder_name):
     fig, ax = plt.subplots(figsize=(12, 10))
     ax = sns.heatmap(corr, annot=True, ax=ax)
     plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name, filename))
+
+
+def princ_comp_anal(X, folder_name):
+    pca = PCA().fit(X)
+    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    plt.xlabel('Number of components')
+    plt.ylabel('Cumulative explained variance')
+    plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name, "pca.png"))
+ 
+    principal = PCA(n_components=2)
+    principal.fit(X)
+    X_pca = principal.transform(X)
+    
+    # Check the dimensions of data after PCA
+    print("New dimension of data: ", X_pca.shape)
+
+    return X_pca

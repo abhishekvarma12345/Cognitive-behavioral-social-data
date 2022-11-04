@@ -6,6 +6,7 @@ import numpy as np
 from dython.nominal import conditional_entropy
 from dython.nominal import Counter
 import seaborn as sns
+import matplotlib.image as mpimg
 from sklearn.decomposition import PCA
 
 def make_timestamp_dir(folder_name):
@@ -24,13 +25,33 @@ def save_plot(columns, feature_importances, filename, dir):
     plt.savefig(os.path.join(dir, filename))
     return fig
 
-#def merge_plots(plot_1, plot_2, plot_3, filename):
-#    fig, ax = plt.subplots(nrows = 2, ncols = 2, figsize = (25,20))
-#    ax[0,0] = plot_1
-#    ax[0,1] = plot_2
-#    ax[1,0] = plot_3
-#    filename = "testing"
-#    plt.savefig(os.path.join(os.getcwd(), 'feature_selection', 'artifacts', filename))
+def merge_plots(plots_dir, filename):
+    img1 = mpimg.imread(os.path.join(plots_dir, 'categorical_correlation.png'))
+    img2 = mpimg.imread(os.path.join(plots_dir, 'chi_2.png'))
+    img3 = mpimg.imread(os.path.join(plots_dir, 'dtree.png'))
+    img4 = mpimg.imread(os.path.join(plots_dir, 'mutual_inf.png'))
+    img5 = mpimg.imread(os.path.join(plots_dir, 'perm_knn.png'))
+    img6 = mpimg.imread(os.path.join(plots_dir, 'rforest.png'))
+    img7 = mpimg.imread(os.path.join(plots_dir, 'uncertainty_coefficients.png'))
+    img8 = mpimg.imread(os.path.join(plots_dir, 'xgboost.png'))
+    fig , ax = plt.subplots(2, 4, figsize=(15, 7))
+    ax[0,0].imshow(img1)
+    ax[0,0].axis("off")
+    ax[0,1].imshow(img2)
+    ax[0,1].axis("off")
+    ax[0,2].imshow(img3)
+    ax[0,2].axis("off")
+    ax[0,3].imshow(img4)
+    ax[0,3].axis("off")
+    ax[1,0].imshow(img5)
+    ax[1,0].axis("off")
+    ax[1,1].imshow(img6)
+    ax[1,1].axis("off")
+    ax[1,2].imshow(img7)
+    ax[1,2].axis("off")
+    ax[1,3].imshow(img8)
+    ax[1,3].axis("off")
+    fig.savefig(os.path.join(plots_dir, filename))
 
 def select_features(X_train, y_train, X_test, score_f):
 	fs = SelectKBest(score_func=score_f, k='all')

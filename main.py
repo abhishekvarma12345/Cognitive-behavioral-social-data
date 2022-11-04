@@ -3,7 +3,7 @@ from feature_selection.data_mngt import read_data, split_data
 from feature_selection.data_preprocessing import imbalance_check, label_encoding, scale_data
 from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff
 from feature_selection.utils import princ_comp_anal
-#from feature_selection.utils import merge_plots
+from feature_selection.utils import merge_plots
 from feature_selection.utils import make_timestamp_dir
 
 ## follow PEP8 standards 
@@ -69,7 +69,11 @@ if __name__ == '__main__':
     X_pca = princ_comp_anal(X_train_scaled, mydir)
 
     # Merge all different plots in one figure and save it
-    #merge_plots(plot_dtree, plot_rforest, plot_xgboost, filename)
+    artifact_dir = os.path.join(os.getcwd(), 'feature_selection', 'artifacts')
+    dataset_name = '5. PHQ9_GAD7'
+    time_stamp = os.listdir(os.path.join(artifact_dir, dataset_name))[-1]
+    plots_dir = os.path.join(artifact_dir, dataset_name, time_stamp)
+    merge_plots(plots_dir , "combined.png")
 
     
 

@@ -12,8 +12,7 @@ from sklearn.decomposition import PCA
 def make_timestamp_dir(folder_name):
     mydir = os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name,
                          datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
-    if os.path.exists(mydir) == False:
-        os.makedirs(mydir)
+    os.makedirs(mydir, exist_ok=True)
 
     return mydir
 

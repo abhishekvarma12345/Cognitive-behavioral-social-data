@@ -69,11 +69,7 @@ if __name__ == '__main__':
     X_pca = princ_comp_anal(X_train_scaled, mydir)
 
     # Merge all different plots in one figure and save it
-    artifact_dir = os.path.join(os.getcwd(), 'feature_selection', 'artifacts')
-    dataset_name = '5. PHQ9_GAD7'
-    time_stamp = os.listdir(os.path.join(artifact_dir, dataset_name))[-1]
-    plots_dir = os.path.join(artifact_dir, dataset_name, time_stamp)
-    merge_plots(plots_dir , "combined.png")
+    merge_plots(mydir , "combined.png")
 
     
 

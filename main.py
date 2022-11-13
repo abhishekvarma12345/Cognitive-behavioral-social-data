@@ -4,7 +4,7 @@ from feature_selection.data_preprocessing import imbalance_check, label_encoding
 from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff
 from feature_selection.utils import princ_comp_anal
 from feature_selection.utils import merge_plots
-from feature_selection.utils import make_timestamp_dir
+from feature_selection.utils import make_timestamp_dir, compare_metrics
 
 ## follow PEP8 standards 
 # Class names must be camelcase (Ex: DataManagement)
@@ -41,22 +41,22 @@ if __name__ == '__main__':
     assert y_train.value_counts().loc['H'] == y_train_encoded.value_counts().loc[1]
 
     # model training for feature selection
-    plot_dtree = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir)
+    dtree_metrics = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir)
     print("end of decision tree".center(50,"*"))
 
-    plot_rforest = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir)
+    rforest_metrics = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir)
     print("end of random forest".center(50,'*'))
 
-    plot_xgboost = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir)
+    xgboost_metrics = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir)
     print("end of xgboost".center(50,'*'))
 
     plot_perm = perm_knn(X_train_scaled, y_train_encoded, mydir)
     print("end of permutation importances with knn".center(50,'*'))
 
-    plot_chi2 = chi_2(X_train, y_train_encoded, X_test, mydir)
+    selected_features_chi2 = chi_2(X_train, y_train_encoded, X_test, mydir, n_features_to_select = 2)
     print("end of chi2 feature selection".center(50,'*'))
 
-    plot_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, mydir)
+    selected_features_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, mydir, n_features_to_select = 2)
     print("end of mutual information feature selection".center(50,'*'))
 
     categorical_corr(df, mydir)
@@ -71,5 +71,21 @@ if __name__ == '__main__':
     # Merge all different plots in one figure and save it
     merge_plots(mydir , "combined.png")
 
-    
+    # Reduce number of features
+    X_train_reduced = X_train_scaled.loc[:,selected_features_chi2]
+    X_test_reduced = X_test_scaled.loc[:,selected_features_chi2]
 
+    # Try the models with the reduced features
+    dtree_metrics_red = dtree(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, plot = False)
+    print("end of decision tree".center(50,"*"))
+
+    rforest_metrics_red = rforest(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, plot = False)
+    print("end of random forest".center(50,'*'))
+
+    xgboost_metrics_red = xgboost(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, plot = False)
+    print("end of xgboost".center(50,'*'))
+
+    #Compare metrics
+    compare_metrics(dtree_metrics, dtree_metrics_red, "Decision tree")
+    compare_metrics(rforest_metrics, rforest_metrics_red, "Random Forest")
+    compare_metrics(xgboost_metrics, xgboost_metrics_red, "XGBoost")

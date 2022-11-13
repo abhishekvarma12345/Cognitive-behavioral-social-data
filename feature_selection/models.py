@@ -1,4 +1,4 @@
-from feature_selection.utils import save_plot,select_features , cramers_corrected_stat, theils_u, save_plot_sns
+from feature_selection.utils import save_plot,select_features , cramers_corrected_stat, theils_u, save_plot_sns, get_metrics
 
 
 from sklearn.tree import DecisionTreeClassifier
@@ -17,74 +17,76 @@ import numpy as np
 from itertools import combinations
 
 
-def dtree(X, y, X_test, y_test, dir, action=None):
+def dtree(X, y, X_test, y_test, dir, plot = True, action=None):
     # define the model
     model = DecisionTreeClassifier()
     # fit the model
     model.fit(X, y)
     # predict
     y_pred = model.predict(X_test)
+    metrics_dict = get_metrics(y_test, y_pred)
+
     # Print metrics
-    print("Decision tree metrics: ")
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    print("Roc_auc:", metrics.roc_auc_score(y_test, y_pred))
-    print("F1:", metrics.f1_score(y_test, y_pred))
-    print("Precision:", metrics.precision_score(y_test, y_pred))
-    print("Recall:", metrics.recall_score(y_test, y_pred))
+    for k, v in metrics_dict.items():
+        print(k, ":", v)
+
     # get importance
     importance = model.feature_importances_
     # summarize feature importance
     print("Feature importance: ")
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
-    dtree_plot = save_plot(X.columns, importance, 'dtree.png', dir)
-    return dtree_plot
 
-def rforest(X, y, X_test, y_test, dir, action=None):
+    if plot:
+        dtree_plot = save_plot(X.columns, importance, 'dtree.png', dir)
+    return metrics_dict
+
+def rforest(X, y, X_test, y_test, dir, plot = True, action=None):
 
     model = RandomForestClassifier()
     # fit the model
     model.fit(X, y)
     # predict
     y_pred = model.predict(X_test)
+    metrics_dict = get_metrics(y_test, y_pred)
+
     # Print metrics
-    print("Random forest metrics: ")
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    print("Roc_auc:", metrics.roc_auc_score(y_test, y_pred))
-    print("F1:", metrics.f1_score(y_test, y_pred))
-    print("Precision:", metrics.precision_score(y_test, y_pred))
-    print("Recall:", metrics.recall_score(y_test, y_pred))
+    for k, v in metrics_dict.items():
+        print(k, ":", v)
     # get importance
     importance = model.feature_importances_
     # summarize feature importance
     print("Feature importance: ")
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
-    rforest_plot = save_plot(X.columns, importance, 'rforest.png', dir)
-    return rforest_plot
 
-def xgboost(X, y, X_test, y_test, dir, action=None):
+    if plot:
+        rforest_plot = save_plot(X.columns, importance, 'rforest.png', dir)
+    return metrics_dict
+
+def xgboost(X, y, X_test, y_test, dir, plot = True, action=None):
     # define the model
     model = XGBClassifier()
     # fit the model
     model.fit(X, y)
     # predict
     y_pred = model.predict(X_test)
+    metrics_dict = get_metrics(y_test, y_pred)
+
     # Print metrics
-    print("Random forest metrics: ")
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    print("Roc_auc:", metrics.roc_auc_score(y_test, y_pred))
-    print("F1:", metrics.f1_score(y_test, y_pred))
-    print("Precision:", metrics.precision_score(y_test, y_pred))
-    print("Recall:", metrics.recall_score(y_test, y_pred))
+    for k, v in metrics_dict.items():
+        print(k, ":", v)
+        
     # get importance
     importance = model.feature_importances_
     # summarize feature importance
     print("Feature importance: ")
     for i,v in enumerate(importance):
         print('Feature: %0d, Score: %.5f' % (i,v))
-    xgboost_plot = save_plot(X.columns, importance, 'xgboost.png', dir)
-    return xgboost_plot
+
+    if plot:
+        xgboost_plot = save_plot(X.columns, importance, 'xgboost.png', dir)
+    return metrics_dict
 
 
 def perm_knn(X,y, dir, action = None):
@@ -104,22 +106,38 @@ def perm_knn(X,y, dir, action = None):
     return perm_plot 
 
  
-def chi_2(X_train, y_train, X_test, dir):
+def chi_2(X_train, y_train, X_test, dir, n_features_to_select):
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, chi2)
-    # what are scores for the features
-    for i in range(len(fs.scores_)):
-        print('Feature %d: %f' % (i, fs.scores_[i]))
+
+    dict_name_score = dict(zip(fs.get_feature_names_out(), fs.scores_))
+    max_scores = sorted(fs.scores_)[-n_features_to_select:]
+    selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
+
+    # Print all feature scores
+    for k,v in dict_name_score.items():
+        print('Feature', k, ':', round(v,2))
+
     # plot the scores
     chi2_plot = save_plot(X_train.columns, fs.scores_, 'chi_2.png', dir)
+    return selected_feat_names
 
 
-def mutual_inf(X_train, y_train, X_test, dir):
+def mutual_inf(X_train, y_train, X_test, dir, n_features_to_select):
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, mutual_info_classif)
     # what are scores for the features
-    for i in range(len(fs.scores_)):
-        print('Feature %d: %f' % (i, fs.scores_[i]))
+    # for i in range(len(fs.scores_)):
+    #     print('Feature %d: %f' % (i, fs.scores_[i]))
+
+    dict_name_score = dict(zip(fs.get_feature_names_out(), fs.scores_))
+    max_scores = sorted(fs.scores_)[-n_features_to_select:]
+    selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
+
+    # Print all feature scores
+    for k,v in dict_name_score.items():
+        print('Feature', k, ':', round(v,2))
+
     # plot the scores
     mutualinf_plot = save_plot(X_train.columns, fs.scores_, 'mutual_inf.png', dir)
 

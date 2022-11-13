@@ -8,6 +8,7 @@ from dython.nominal import Counter
 import seaborn as sns
 import matplotlib.image as mpimg
 from sklearn.decomposition import PCA
+from sklearn import metrics
 
 def make_timestamp_dir(folder_name):
     mydir = os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name,
@@ -114,3 +115,25 @@ def princ_comp_anal(X, dir):
     print("New dimension of data: ", X_pca.shape)
 
     return X_pca
+
+
+def get_metrics(y_test, y_pred):
+    metrics_dict = {"Accuracy" : metrics.accuracy_score(y_test, y_pred),
+                    "Roc_auc" : metrics.roc_auc_score(y_test, y_pred),
+                    "F1" : metrics.f1_score(y_test, y_pred),
+                    "Precision" : metrics.precision_score(y_test, y_pred),
+                    "Recall" : metrics.recall_score(y_test, y_pred)}
+
+    return metrics_dict
+
+
+def compare_metrics(dict_full, dict_selected, model):
+    print(model.center(50,'*'))
+    print("Metric ", "All features ", "Selected Features ")
+    for key in dict_full.keys():
+        print(key, round(dict_full[key], 2), round(dict_selected[key], 2))
+
+
+
+### Need to implement a function to see if all models are giving same feature importance order ###
+

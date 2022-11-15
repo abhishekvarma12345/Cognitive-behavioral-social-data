@@ -17,7 +17,7 @@ import numpy as np
 from itertools import combinations
 
 
-def dtree(X, y, X_test, y_test, dir, plot = True, action=None):
+def dtree(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action=None):
     # define the model
     model = DecisionTreeClassifier()
     # fit the model
@@ -32,6 +32,10 @@ def dtree(X, y, X_test, y_test, dir, plot = True, action=None):
 
     # get importance
     importance = model.feature_importances_
+    imp_ind = [(ind, imp) for ind, imp in enumerate(importance)]
+    best_n_feat = sorted(imp_ind, key=lambda tup: tup[1])[-n_features_to_select:]
+    best_n_features = [tup[0] for tup in best_n_feat]
+
     # summarize feature importance
     print("Feature importance: ")
     for i,v in enumerate(importance):
@@ -39,9 +43,13 @@ def dtree(X, y, X_test, y_test, dir, plot = True, action=None):
 
     if plot:
         dtree_plot = save_plot(X.columns, importance, 'dtree.png', dir)
-    return metrics_dict
 
-def rforest(X, y, X_test, y_test, dir, plot = True, action=None):
+    if n_features_to_select == 0:
+        return metrics_dict
+    else:
+        return metrics_dict, best_n_features
+
+def rforest(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action=None):
 
     model = RandomForestClassifier()
     # fit the model
@@ -55,6 +63,11 @@ def rforest(X, y, X_test, y_test, dir, plot = True, action=None):
         print(k, ":", v)
     # get importance
     importance = model.feature_importances_
+    imp_ind = [(ind, imp) for ind, imp in enumerate(importance)]
+    best_n_feat = sorted(imp_ind, key=lambda tup: tup[1])[-n_features_to_select:]
+    best_n_features = [tup[0] for tup in best_n_feat]
+
+
     # summarize feature importance
     print("Feature importance: ")
     for i,v in enumerate(importance):
@@ -62,9 +75,13 @@ def rforest(X, y, X_test, y_test, dir, plot = True, action=None):
 
     if plot:
         rforest_plot = save_plot(X.columns, importance, 'rforest.png', dir)
-    return metrics_dict
 
-def xgboost(X, y, X_test, y_test, dir, plot = True, action=None):
+    if n_features_to_select == 0:
+        return metrics_dict
+    else:
+        return metrics_dict, best_n_features
+
+def xgboost(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action=None):
     # define the model
     model = XGBClassifier()
     # fit the model
@@ -79,6 +96,10 @@ def xgboost(X, y, X_test, y_test, dir, plot = True, action=None):
         
     # get importance
     importance = model.feature_importances_
+    imp_ind = [(ind, imp) for ind, imp in enumerate(importance)]
+    best_n_feat = sorted(imp_ind, key=lambda tup: tup[1])[-n_features_to_select:]
+    best_n_features = [tup[0] for tup in best_n_feat]
+
     # summarize feature importance
     print("Feature importance: ")
     for i,v in enumerate(importance):
@@ -86,7 +107,11 @@ def xgboost(X, y, X_test, y_test, dir, plot = True, action=None):
 
     if plot:
         xgboost_plot = save_plot(X.columns, importance, 'xgboost.png', dir)
-    return metrics_dict
+
+    if n_features_to_select == 0:
+        return metrics_dict
+    else:
+        return metrics_dict, best_n_features
 
 
 def perm_knn(X,y, dir, action = None):

@@ -133,10 +133,7 @@ def compare_metrics(dict_full, dict_selected, model):
     for key in dict_full.keys():
         print(key, round(dict_full[key], 2), round(dict_selected[key], 2))
 
-
-
 ### Need to implement a function to see if all models are giving same feature importance order ###
-
 def is_model_independent(*args):
     s = set(tuple(i) for i in args)
     if len(s) == 1:

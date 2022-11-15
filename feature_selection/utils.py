@@ -137,3 +137,10 @@ def compare_metrics(dict_full, dict_selected, model):
 
 ### Need to implement a function to see if all models are giving same feature importance order ###
 
+def is_model_independent(*args):
+    s = set(tuple(i) for i in args)
+    if len(s) == 1:
+        return True
+    else:
+        return False
+

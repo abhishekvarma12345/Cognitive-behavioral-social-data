@@ -1,18 +1,32 @@
 from feature_selection.utils import save_plot,select_features , cramers_corrected_stat, theils_u, save_plot_sns, get_metrics
 
-
+# intrinsic methods
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
+
+# dimensionality reduction methods
+# instead of PCA we can use Fisher's Linear Discriminant
 from sklearn.decomposition import PCA
 from sklearn import metrics
 from sklearn.linear_model import LogisticRegression
 
+# permutation importance
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.inspection import permutation_importance
+
+# filter methods
+
+# considering input datatype:ordinal, output datatype:categorical
 from sklearn.feature_selection import chi2
 from sklearn.feature_selection import mutual_info_classif
-from sklearn.feature_selection import SelectFromModel
+
+# considering input datatype:numerical, output datatype:categorical
+from sklearn.feature_selection import f_classif
+# kendalls rank correlation method df.corr(method='kendall')
+
+
+from sklearn.feature_selection import SelectFromModel, SelectKBest
 import pandas as pd
 import numpy as np
 from itertools import combinations
@@ -174,16 +188,14 @@ def chi_2(X_train, y_train, X_test, dir, n_features_to_select):
         print('Feature', k, ':', round(v,2))
 
     # plot the scores
-    chi2_plot = save_plot(X_train.columns, fs.scores_, 'chi_2.png', dir)
+    save_plot(X_train.columns, fs.scores_, 'chi_2.png', dir)
     return selected_feat_names
 
 
 def mutual_inf(X_train, y_train, X_test, dir, n_features_to_select):
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, mutual_info_classif)
-    # what are scores for the features
-    # for i in range(len(fs.scores_)):
-    #     print('Feature %d: %f' % (i, fs.scores_[i]))
+    
 
     dict_name_score = dict(zip(fs.get_feature_names_out(), fs.scores_))
     max_scores = sorted(fs.scores_)[-n_features_to_select:]
@@ -194,7 +206,8 @@ def mutual_inf(X_train, y_train, X_test, dir, n_features_to_select):
         print('Feature', k, ':', round(v,2))
 
     # plot the scores
-    mutualinf_plot = save_plot(X_train.columns, fs.scores_, 'mutual_inf.png', dir)
+    save_plot(X_train.columns, fs.scores_, 'mutual_inf.png', dir)
+    return selected_feat_names
 
 
 def categorical_corr(df, dir):
@@ -219,6 +232,27 @@ def unc_coeff(df, dir):
 
     corr = pd.DataFrame(corrM, index=cols, columns=cols)
     save_plot_sns(corr, 'uncertainty_coefficients.png', dir)
+
+def anova(X_train, y_train, X_test, dir, n_features_to_select):
+    # feature selection
+    # feature selection
+    X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, f_classif)
+
+    dict_name_score = dict(zip(fs.get_feature_names_out(), fs.scores_))
+    max_scores = sorted(fs.scores_)[-n_features_to_select:]
+    selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
+
+    # Print all feature scores
+    for k,v in dict_name_score.items():
+        print('Feature', k, ':', round(v,2))
+
+    # plot the scores
+    save_plot(X_train.columns, fs.scores_, 'anova.png', dir)
+    return selected_feat_names
+
+
+
+
 
     
 

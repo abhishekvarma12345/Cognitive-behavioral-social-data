@@ -1,7 +1,7 @@
 import os
 from feature_selection.data_mngt import read_data, split_data
 from feature_selection.data_preprocessing import imbalance_check, label_encoding, scale_data
-from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff, log_reg
+from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff, anova, log_reg
 from feature_selection.utils import princ_comp_anal
 from feature_selection.utils import merge_plots
 from feature_selection.utils import make_timestamp_dir, compare_metrics
@@ -62,6 +62,9 @@ if __name__ == '__main__':
 
     selected_features_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, mydir, n_features_to_select = 2)
     print("end of mutual information feature selection".center(50,'*'))
+
+    selected_features_anova = anova(X_train, y_train_encoded, X_test, mydir, n_features_to_select = 2)
+    print("end of anova feature selection".center(50,'*'))
 
     categorical_corr(df, mydir)
     print("end of categorical correlation study".center(50,'*'))

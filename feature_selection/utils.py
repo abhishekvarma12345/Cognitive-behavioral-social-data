@@ -132,7 +132,3 @@ def compare_metrics(dict_full, dict_selected, model):
     print("Metric ", "All features ", "Selected Features ")
     for key in dict_full.keys():
         print(key, round(dict_full[key], 2), round(dict_selected[key], 2))
-
-
-
-

@@ -1,9 +1,9 @@
 import os
 from feature_selection.data_mngt import read_data, split_data
 from feature_selection.data_preprocessing import imbalance_check, label_encoding, scale_data
-from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff
+from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff, log_reg
 from feature_selection.utils import princ_comp_anal
-from feature_selection.utils import merge_plots, is_model_independent
+from feature_selection.utils import merge_plots
 from feature_selection.utils import make_timestamp_dir, compare_metrics
 
 ## follow PEP8 standards 
@@ -50,8 +50,12 @@ if __name__ == '__main__':
     xgboost_metrics = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, n_features_to_select = 0)
     print("end of xgboost".center(50,'*'))
 
+    logreg_metrics = log_reg(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, n_features_to_select = 0)
+    print("end of logistic regression".center(50,'*'))
+
     plot_perm = perm_knn(X_train_scaled, y_train_encoded, mydir)
     print("end of permutation importances with knn".center(50,'*'))
+
 
     selected_features_chi2 = chi_2(X_train, y_train_encoded, X_test, mydir, n_features_to_select = 2)
     print("end of chi2 feature selection".center(50,'*'))
@@ -85,10 +89,9 @@ if __name__ == '__main__':
     xgboost_metrics_red, xgboost_features = xgboost(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, n_features_to_select = 2, plot = False)
     print("end of xgboost".center(50,'*'))
 
+
     # Compare metrics
     compare_metrics(dtree_metrics, dtree_metrics_red, "Decision tree")
     compare_metrics(rforest_metrics, rforest_metrics_red, "Random Forest")
     compare_metrics(xgboost_metrics, xgboost_metrics_red, "XGBoost")
 
-    # Check for model independent
-    print("Features are model independent: ", is_model_independent(dtree_features, rforest_features, xgboost_features))

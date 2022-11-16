@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.decomposition import PCA
 from sklearn import metrics
+from sklearn.linear_model import LogisticRegression
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.inspection import permutation_importance
@@ -107,6 +108,35 @@ def xgboost(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action
 
     if plot:
         xgboost_plot = save_plot(X.columns, importance, 'xgboost.png', dir)
+
+    if n_features_to_select == 0:
+        return metrics_dict
+    else:
+        return metrics_dict, best_n_features
+
+def log_reg(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action=None):
+    
+    # define the model
+    model = LogisticRegression()
+    # fit the model
+    model.fit(X, y)
+    # predict
+    y_pred = model.predict(X_test)
+    metrics_dict = get_metrics(y_test, y_pred)
+
+    # get importance
+    importance = model.coef_[0]
+    imp_ind = [(ind, imp) for ind, imp in enumerate(importance)]
+    best_n_feat = sorted(imp_ind, key=lambda tup: tup[1])[-n_features_to_select:]
+    best_n_features = [tup[0] for tup in best_n_feat]
+
+    # summarize feature importance
+    for i,v in enumerate(importance):
+        print('Feature: %0d, Score: %.5f' % (i,v))
+
+    # plot feature importance
+    if plot:
+        save_plot(X.columns, importance, 'log_reg.png', dir)
 
     if n_features_to_select == 0:
         return metrics_dict

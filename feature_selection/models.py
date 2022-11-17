@@ -4,11 +4,14 @@ from feature_selection.utils import save_plot,select_features , cramers_correcte
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 
 # dimensionality reduction methods
 # instead of PCA we can use Fisher's Linear Discriminant
 from sklearn.decomposition import PCA
 from sklearn import metrics
+
 
 # permutation importance
 from sklearn.neighbors import KNeighborsClassifier
@@ -31,7 +34,7 @@ import numpy as np
 from itertools import combinations
 
 
-def dtree(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action=None):
+def dtree(X, y, X_test, y_test, dir, print_features = True, plot = True):
     # define the model
     model = DecisionTreeClassifier()
     # fit the model
@@ -44,26 +47,20 @@ def dtree(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action=N
     for k, v in metrics_dict.items():
         print(k, ":", v)
 
-    # get importance
+    # get importances
     importance = model.feature_importances_
-    imp_ind = [(ind, imp) for ind, imp in enumerate(importance)]
-    best_n_feat = sorted(imp_ind, key=lambda tup: tup[1])[-n_features_to_select:]
-    best_n_features = [tup[0] for tup in best_n_feat]
-
-    # summarize feature importance
-    print("Feature importance: ")
-    for i,v in enumerate(importance):
-        print('Feature: %0d, Score: %.5f' % (i,v))
+    # Print all feature scores
+    if print_features:
+        for k,v in zip(X.columns, importance):
+            print('Feature', k, ':', round(v,2))
 
     if plot:
-        dtree_plot = save_plot(X.columns, importance, 'dtree.png', dir)
+        save_plot(X.columns, importance, 'dtree.png', dir)
 
-    if n_features_to_select == 0:
-        return metrics_dict
-    else:
-        return metrics_dict, best_n_features
+    return metrics_dict
 
-def rforest(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action=None):
+
+def rforest(X, y, X_test, y_test, dir, print_features = True, plot = True):
 
     model = RandomForestClassifier()
     # fit the model
@@ -75,27 +72,21 @@ def rforest(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action
     # Print metrics
     for k, v in metrics_dict.items():
         print(k, ":", v)
-    # get importance
+
+    # get importances
     importance = model.feature_importances_
-    imp_ind = [(ind, imp) for ind, imp in enumerate(importance)]
-    best_n_feat = sorted(imp_ind, key=lambda tup: tup[1])[-n_features_to_select:]
-    best_n_features = [tup[0] for tup in best_n_feat]
-
-
-    # summarize feature importance
-    print("Feature importance: ")
-    for i,v in enumerate(importance):
-        print('Feature: %0d, Score: %.5f' % (i,v))
+    # Print all feature scores
+    if print_features:
+        for k,v in zip(X.columns, importance):
+            print('Feature', k, ':', round(v,2))
 
     if plot:
-        rforest_plot = save_plot(X.columns, importance, 'rforest.png', dir)
+        save_plot(X.columns, importance, 'rforest.png', dir)
 
-    if n_features_to_select == 0:
-        return metrics_dict
-    else:
-        return metrics_dict, best_n_features
+    return metrics_dict
 
-def xgboost(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action=None):
+
+def xgboost(X, y, X_test, y_test, dir, print_features = True, plot = True):
     # define the model
     model = XGBClassifier()
     # fit the model
@@ -108,27 +99,65 @@ def xgboost(X, y, X_test, y_test, dir, n_features_to_select, plot = True, action
     for k, v in metrics_dict.items():
         print(k, ":", v)
         
-    # get importance
     importance = model.feature_importances_
-    imp_ind = [(ind, imp) for ind, imp in enumerate(importance)]
-    best_n_feat = sorted(imp_ind, key=lambda tup: tup[1])[-n_features_to_select:]
-    best_n_features = [tup[0] for tup in best_n_feat]
-
-    # summarize feature importance
-    print("Feature importance: ")
-    for i,v in enumerate(importance):
-        print('Feature: %0d, Score: %.5f' % (i,v))
+    # Print all feature scores
+    if print_features:
+        for k,v in zip(X.columns, importance):
+            print('Feature', k, ':', round(v,2))
 
     if plot:
-        xgboost_plot = save_plot(X.columns, importance, 'xgboost.png', dir)
+        save_plot(X.columns, importance, 'xgboost.png', dir)
 
-    if n_features_to_select == 0:
-        return metrics_dict
-    else:
-        return metrics_dict, best_n_features
+    return metrics_dict
+
+def log_reg(X, y, X_test, y_test, dir, print_features = True, plot = True):
+    
+    # define the model
+    model = LogisticRegression()
+    # fit the model
+    model.fit(X, y)
+    # predict
+    y_pred = model.predict(X_test)
+    metrics_dict = get_metrics(y_test, y_pred)
+
+    importance = model.coef_[0]
+    # Print all feature scores
+    if print_features:
+        for k,v in zip(X.columns, importance):
+            print('Feature', k, ':', round(v,2))
+
+    # plot feature importance
+    if plot:
+        save_plot(X.columns, importance, 'log_reg.png', dir)
+
+    return metrics_dict
 
 
-def perm_knn(X,y, dir, action = None):
+def svm(X, y, X_test, y_test, dir, print_features = True, plot = True):
+
+    # define the model
+    model = SVC(kernel = "linear")
+    # fit the model
+    model.fit(X, y)
+    # predict
+    y_pred = model.predict(X_test)
+    metrics_dict = get_metrics(y_test, y_pred)
+
+    importance = model.coef_[0]
+    # Print all feature scores
+    if print_features:
+
+        for k,v in zip(X.columns, importance):
+            print('Feature', k, ':', round(v,2))
+
+    # plot feature importance
+    if plot:
+        save_plot(X.columns, importance, 'svm.png', dir)
+
+    return metrics_dict
+
+
+def perm_knn(X,y, dir, n_features_to_select, print_features = True):
     # define the model
     model = KNeighborsClassifier()
     # fit the model
@@ -137,15 +166,21 @@ def perm_knn(X,y, dir, action = None):
     results = permutation_importance(model, X, y, scoring='accuracy')
     # get importance
     importance = results.importances_mean
+
+    dict_name_score = dict(zip(X.columns, importance))
+    max_scores = sorted(importance)[-n_features_to_select:]
+    selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
+
     # summarize feature importance
-    for i,v in enumerate(importance):
-        print('Feature: %0d, Score: %.5f' % (i,v))
+    if print_features:
+        for i,v in enumerate(importance):
+            print('Feature: %0d, Score: %.5f' % (i,v))
     # plot feature importance
-    perm_plot = save_plot(X.columns, importance, 'perm_knn.png', dir)
-    return perm_plot 
+    save_plot(X.columns, importance, 'perm_knn.png', dir)
+    return selected_feat_names 
 
  
-def chi_2(X_train, y_train, X_test, dir, n_features_to_select):
+def chi_2(X_train, y_train, X_test, dir, n_features_to_select, print_features = True):
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, chi2)
 
@@ -154,15 +189,16 @@ def chi_2(X_train, y_train, X_test, dir, n_features_to_select):
     selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
 
     # Print all feature scores
-    for k,v in dict_name_score.items():
-        print('Feature', k, ':', round(v,2))
+    if print_features:
+        for k,v in dict_name_score.items():
+            print('Feature', k, ':', round(v,2))
 
     # plot the scores
     save_plot(X_train.columns, fs.scores_, 'chi_2.png', dir)
     return selected_feat_names
 
 
-def mutual_inf(X_train, y_train, X_test, dir, n_features_to_select):
+def mutual_inf(X_train, y_train, X_test, dir, n_features_to_select, print_features = True):
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, mutual_info_classif)
     
@@ -172,8 +208,9 @@ def mutual_inf(X_train, y_train, X_test, dir, n_features_to_select):
     selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
 
     # Print all feature scores
-    for k,v in dict_name_score.items():
-        print('Feature', k, ':', round(v,2))
+    if print_features:
+        for k,v in dict_name_score.items():
+            print('Feature', k, ':', round(v,2))
 
     # plot the scores
     save_plot(X_train.columns, fs.scores_, 'mutual_inf.png', dir)
@@ -203,8 +240,7 @@ def unc_coeff(df, dir):
     corr = pd.DataFrame(corrM, index=cols, columns=cols)
     save_plot_sns(corr, 'uncertainty_coefficients.png', dir)
 
-def anova(X_train, y_train, X_test, dir, n_features_to_select):
-    # feature selection
+def anova(X_train, y_train, X_test, dir, n_features_to_select, print_features = True):
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, f_classif)
 
@@ -213,8 +249,9 @@ def anova(X_train, y_train, X_test, dir, n_features_to_select):
     selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
 
     # Print all feature scores
-    for k,v in dict_name_score.items():
-        print('Feature', k, ':', round(v,2))
+    if print_features:
+        for k,v in dict_name_score.items():
+            print('Feature', k, ':', round(v,2))
 
     # plot the scores
     save_plot(X_train.columns, fs.scores_, 'anova.png', dir)

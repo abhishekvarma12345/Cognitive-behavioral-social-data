@@ -9,6 +9,7 @@ import seaborn as sns
 import matplotlib.image as mpimg
 from sklearn.decomposition import PCA
 from sklearn import metrics
+import pandas as pd
 
 def make_timestamp_dir(folder_name):
     mydir = os.path.join(os.getcwd(), 'feature_selection', 'artifacts', folder_name,
@@ -129,15 +130,11 @@ def get_metrics(y_test, y_pred):
 
 def compare_metrics(dict_full, dict_selected, model):
     print(model.center(50,'*'))
-    print("Metric ", "All features ", "Selected Features ")
+    
     for key in dict_full.keys():
-        print(key, round(dict_full[key], 2), round(dict_selected[key], 2))
+        dict_full[key] = [round(dict_full[key], 2), round(dict_selected[key], 2)] 
 
-### Need to implement a function to see if all models are giving same feature importance order ###
-def is_model_independent(*args):
-    s = set(tuple(i) for i in args)
-    if len(s) == 1:
-        return True
-    else:
-        return False
+    df = pd.DataFrame.from_dict(dict_full)
+    df["Features"] = ["All", "Selected"]
 
+    print(df.set_index("Features")) 

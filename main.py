@@ -1,9 +1,9 @@
 import os
 from feature_selection.data_mngt import read_data, split_data
 from feature_selection.data_preprocessing import imbalance_check, label_encoding, scale_data
-from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff, anova
+from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff, anova, log_reg, svm
 from feature_selection.utils import princ_comp_anal
-from feature_selection.utils import merge_plots, is_model_independent
+from feature_selection.utils import merge_plots
 from feature_selection.utils import make_timestamp_dir, compare_metrics
 
 ## follow PEP8 standards 
@@ -39,27 +39,36 @@ if __name__ == '__main__':
     y_train_encoded = label_encoding(y_train)
     y_test_encoded = label_encoding(y_test)
     assert y_train.value_counts().loc['H'] == y_train_encoded.value_counts().loc[1]
+    
+    print_features = False
+    n_features_to_select = 2
 
     # model training for feature selection
-    dtree_metrics = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, n_features_to_select = 0)
+    dtree_metrics = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
     print("end of decision tree".center(50,"*"))
 
-    rforest_metrics = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, n_features_to_select = 0)
+    rforest_metrics = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
     print("end of random forest".center(50,'*'))
 
-    xgboost_metrics = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, n_features_to_select = 0)
+    xgboost_metrics = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
     print("end of xgboost".center(50,'*'))
 
-    plot_perm = perm_knn(X_train_scaled, y_train_encoded, mydir)
+    logreg_metrics = log_reg(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
+    print("end of logistic regression".center(50,'*'))
+
+    svm_metrics = svm(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
+    print("end of support vector machine".center(50,'*'))
+
+    plot_perm = perm_knn(X_train_scaled, y_train_encoded, mydir, n_features_to_select, print_features)
     print("end of permutation importances with knn".center(50,'*'))
 
-    selected_features_chi2 = chi_2(X_train, y_train_encoded, X_test, mydir, n_features_to_select = 2)
+    selected_features_chi2 = chi_2(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
     print("end of chi2 feature selection".center(50,'*'))
 
-    selected_features_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, mydir, n_features_to_select = 2)
+    selected_features_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
     print("end of mutual information feature selection".center(50,'*'))
 
-    selected_features_anova = anova(X_train, y_train_encoded, X_test, mydir, n_features_to_select = 2)
+    selected_features_anova = anova(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
     print("end of anova feature selection".center(50,'*'))
 
     categorical_corr(df, mydir)
@@ -79,19 +88,26 @@ if __name__ == '__main__':
     X_test_reduced = X_test_scaled.loc[:,selected_features_chi2]
 
     # Try the models with the reduced features
-    dtree_metrics_red, dtree_features = dtree(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, n_features_to_select = 2, plot = False)
+    dtree_metrics_red = dtree(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
     print("end of decision tree".center(50,"*"))
 
-    rforest_metrics_red, rforest_features = rforest(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, n_features_to_select = 2, plot = False)
+    rforest_metrics_red = rforest(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
     print("end of random forest".center(50,'*'))
 
-    xgboost_metrics_red, xgboost_features = xgboost(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, n_features_to_select = 2, plot = False)
+    xgboost_metrics_red = xgboost(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
     print("end of xgboost".center(50,'*'))
+
+    logreg_metrics_red = log_reg(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
+    print("end of xgboost".center(50,'*'))
+
+    svm_metrics_red = svm(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
+    print("end of xgboost".center(50,'*'))
+
 
     # Compare metrics
     compare_metrics(dtree_metrics, dtree_metrics_red, "Decision tree")
     compare_metrics(rforest_metrics, rforest_metrics_red, "Random Forest")
     compare_metrics(xgboost_metrics, xgboost_metrics_red, "XGBoost")
+    compare_metrics(logreg_metrics, logreg_metrics_red, "Logistic regression")
+    compare_metrics(svm_metrics, svm_metrics_red, "Support vector machine")
 
-    # Check for model independent
-    print("Features are model independent: ", is_model_independent(dtree_features, rforest_features, xgboost_features))

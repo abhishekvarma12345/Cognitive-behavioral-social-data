@@ -1,4 +1,4 @@
-from feature_selection.utils import save_plot,select_features , cramers_corrected_stat, theils_u, save_plot_sns, get_metrics
+from feature_selection.utils.main_utils import save_plot,select_features , cramers_corrected_stat, theils_u, save_plot_sns, get_metrics
 
 # intrinsic methods
 from sklearn.tree import DecisionTreeClassifier

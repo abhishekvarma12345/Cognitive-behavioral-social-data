@@ -1,36 +1,42 @@
 import os
+import argparse
+from feature_selection.logger import logging
 from feature_selection.data_mngt import read_data, split_data
 from feature_selection.data_preprocessing import imbalance_check, label_encoding, scale_data
 from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff, anova, log_reg, svm
-from feature_selection.utils import princ_comp_anal
-from feature_selection.utils import merge_plots
-from feature_selection.utils import make_timestamp_dir, compare_metrics
+from feature_selection.utils.main_utils import princ_comp_anal, merge_plots, make_timestamp_dir, compare_metrics
+from feature_selection.intrinsic.tree_based import TreeBasedModels
+
+from feature_selection.constants.datasets import DATASETS
+from feature_selection.constants import *
 
 ## follow PEP8 standards 
 # Class names must be camelcase (Ex: DataManagement)
 # function and variable names must be lowercase with words separated by underscore (Ex: read_data, file_path)
 
 if __name__ == '__main__':
-    folders_and_files = [("1. shortDT_1","DT_df_CC.csv"),("1. shortDT_2", "DT_df_JI.csv"),("2. PRMQ", "PRMQ_df.csv" ),
-                       ("3. PCL", "PCL5_df.csv"),("4. NAQ_R", "NAQ_R_df.csv"),("5. PHQ9_GAD7", "PHQ9_GAD7_df.csv"),
-                       ("6. PID5", "PID5_df.csv"),("7. shortPID5", "sPID-5_df.csv"),("8. PRFQ", "PRFQ_df.csv"),
-                       ("9. IESR", "IESR_df.csv"),("10. R_NEO_PI", "faked_honest_combined.csv"),
-                       ("11. DDDT", "RAW_DDDT.CSV"),("12. IADQ", "IADQ_df.csv"),("13. BF_1", "BF_df_CTU.csv"), 
-                       ("13. BF_2", "BF_df_OU.csv"), ("13. BF_3", "BF_df_V.csv")]
-    datasets_dir = os.path.join(os.getcwd(), 'Datasets')
-    folder_name = folders_and_files[5][0]
-    filename = folders_and_files[5][1]
-    file_path = os.path.join(datasets_dir, folder_name, filename)
-    df = read_data(file_path)
+    parser = argparse.ArgumentParser(description='for getting dataset from command-line')
+    parser.add_argument("-d", "--dataset", default="5. PHQ9_GAD7")
+
+    # parsing command line arguments
+    args = parser.parse_args()
+    
+    datasets_dir = DATASETS_DIR
+    dataset_name = args.dataset
+    csv_file_name = DATASETS[dataset_name]
+
+    csv_file_path = os.path.join(datasets_dir, dataset_name, csv_file_name)
+    df = read_data(csv_file_path)
 
     # Make a time stamp directory where storing the plots
-    mydir = make_timestamp_dir(folder_name)
+    cur_time_stamp = make_timestamp_dir(dataset_name)
 
     # checking for class imbalance
     print("Imbalanced classes:",imbalance_check(df))
+    logging.info(f"Imbalanced classes:{imbalance_check(df)}")
 
     # splitting the data into train and test sets
-    X_train, X_test, y_train, y_test = split_data(df, threshold=0.8)
+    X_train, X_test, y_train, y_test = split_data(df, threshold=SPLIT_THRESHOLD)
 
     # scaling data using standard scaler by default(use scaler="minmax" for minmax scaling)
     X_train_scaled, X_test_scaled = scale_data(X_train, X_test)
@@ -40,67 +46,70 @@ if __name__ == '__main__':
     y_test_encoded = label_encoding(y_test)
     assert y_train.value_counts().loc['H'] == y_train_encoded.value_counts().loc[1]
     
-    print_features = False
-    n_features_to_select = 2
+    print_features = PRINT_FEATURES
+    n_features_to_select = NUM_FEATURES_TO_SELECT
+
+    tree_methods = TreeBasedModels(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, cur_time_stamp, print_features, n_features_to_select)
 
     # model training for feature selection
-    dtree_metrics = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
+    dtree_metrics = tree_methods.model(DECISION_TREE)
     print("end of decision tree".center(50,"*"))
 
-    rforest_metrics = rforest(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
+    rforest_metrics = tree_methods.model(RANDOM_FOREST)
     print("end of random forest".center(50,'*'))
 
-    xgboost_metrics = xgboost(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
+    xgboost_metrics = tree_methods.model(XGBOOST)
     print("end of xgboost".center(50,'*'))
 
-    logreg_metrics = log_reg(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
+    
+    logreg_metrics = log_reg(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, cur_time_stamp, print_features)
     print("end of logistic regression".center(50,'*'))
 
-    svm_metrics = svm(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
+    svm_metrics = svm(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, cur_time_stamp, print_features)
     print("end of support vector machine".center(50,'*'))
 
-    plot_perm = perm_knn(X_train_scaled, y_train_encoded, mydir, n_features_to_select, print_features)
+    plot_perm = perm_knn(X_train_scaled, y_train_encoded, cur_time_stamp, n_features_to_select, print_features)
     print("end of permutation importances with knn".center(50,'*'))
 
-    selected_features_chi2 = chi_2(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
+    selected_features_chi2 = chi_2(X_train, y_train_encoded, X_test, cur_time_stamp, n_features_to_select, print_features)
     print("end of chi2 feature selection".center(50,'*'))
 
-    selected_features_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
+    selected_features_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, cur_time_stamp, n_features_to_select, print_features)
     print("end of mutual information feature selection".center(50,'*'))
 
-    selected_features_anova = anova(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
+    selected_features_anova = anova(X_train, y_train_encoded, X_test, cur_time_stamp, n_features_to_select, print_features)
     print("end of anova feature selection".center(50,'*'))
 
-    categorical_corr(df, mydir)
+    categorical_corr(df, cur_time_stamp)
     print("end of categorical correlation study".center(50,'*'))
 
-    unc_coeff(df, mydir)
+    unc_coeff(df, cur_time_stamp)
     print("end of uncertainty coefficients study".center(50,'*'))
 
     print("Start reduction of dimensionality using PCA".center(50,'*'))
-    X_pca = princ_comp_anal(X_train_scaled, mydir)
+    X_pca = princ_comp_anal(X_train_scaled, cur_time_stamp)
 
     # Merge all different plots in one figure and save it
-    merge_plots(mydir , "combined.png")
+    merge_plots(cur_time_stamp , "combined.png")
 
     # Reduce number of features
     X_train_reduced = X_train_scaled.loc[:,selected_features_chi2]
     X_test_reduced = X_test_scaled.loc[:,selected_features_chi2]
 
     # Try the models with the reduced features
-    dtree_metrics_red = dtree(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
+    dtree_metrics_red = dtree(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, cur_time_stamp, print_features, plot = False)
     print("end of decision tree".center(50,"*"))
 
-    rforest_metrics_red = rforest(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
+    rforest_metrics_red = rforest(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, cur_time_stamp, print_features, plot = False)
     print("end of random forest".center(50,'*'))
 
-    xgboost_metrics_red = xgboost(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
+    xgboost_metrics_red = xgboost(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, cur_time_stamp, print_features, plot = False)
     print("end of xgboost".center(50,'*'))
 
-    logreg_metrics_red = log_reg(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
+    logreg_metrics_red = log_reg(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, cur_time_stamp, print_features, plot = False)
     print("end of xgboost".center(50,'*'))
 
-    svm_metrics_red = svm(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
+    svm_metrics_red = svm(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, cur_time_stamp, print_features, plot = False)
     print("end of xgboost".center(50,'*'))
 
 

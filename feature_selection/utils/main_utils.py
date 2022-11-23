@@ -63,11 +63,9 @@ def merge_plots(plots_dir, filename):
     fig.savefig(os.path.join(plots_dir, filename), dpi=1200)
 
 def select_features(X_train, y_train, X_test, score_f):
-	fs = SelectKBest(score_func=score_f, k='all')
-	fs.fit(X_train, y_train)
-	X_train_fs = fs.transform(X_train)
-	X_test_fs = fs.transform(X_test)
-	return X_train_fs, X_test_fs, fs
+    fs = SelectKBest(score_func=score_f, k='all')
+    fs.fit(X_train, y_train)
+    return fs
 
 def cramers_corrected_stat(confusion_matrix):
     """ calculate Cramers V statistic for categorical-categorical association.

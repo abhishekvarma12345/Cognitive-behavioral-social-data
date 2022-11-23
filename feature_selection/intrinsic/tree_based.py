@@ -5,7 +5,7 @@ from xgboost import XGBClassifier
 from feature_selection.constants import PLOTFORMAT
 from feature_selection.utils.main_utils import get_metrics, save_plot
 
-class TreeBasedModels:
+class TreeBasedModels(object):
 
     def __init__(self, X_train, y_train, X_test, y_test, time_stamp, print_features=True, plot = True):
         self.X_train = X_train

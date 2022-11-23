@@ -10,3 +10,10 @@ PLOTFORMAT = ".png"
 DECISION_TREE = "dtree"
 RANDOM_FOREST = "rforest"
 XGBOOST = "xgboost"
+
+LOGISTIC_REGRESSION = "logreg"
+SVM = "svm"
+
+CHISQUARE = "chi_2"
+MUTUALINFO = "mutual_inf"
+ANOVA = "anova"

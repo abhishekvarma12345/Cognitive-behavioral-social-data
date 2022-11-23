@@ -6,6 +6,8 @@ from feature_selection.data_preprocessing import imbalance_check, label_encoding
 from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff, anova, log_reg, svm
 from feature_selection.utils.main_utils import princ_comp_anal, merge_plots, make_timestamp_dir, compare_metrics
 from feature_selection.intrinsic.tree_based import TreeBasedModels
+from feature_selection.intrinsic.coefficient_based import CoefficientBasedModels
+from feature_selection.filter.statistic_based import StatisticBasedModels
 
 from feature_selection.constants.datasets import DATASETS
 from feature_selection.constants import *
@@ -61,23 +63,26 @@ if __name__ == '__main__':
     xgboost_metrics = tree_methods.model(XGBOOST)
     print("end of xgboost".center(50,'*'))
 
+    coeff_methods = CoefficientBasedModels(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, cur_time_stamp, print_features, n_features_to_select)
     
-    logreg_metrics = log_reg(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, cur_time_stamp, print_features)
+    logreg_metrics = coeff_methods.model(LOGISTIC_REGRESSION)
     print("end of logistic regression".center(50,'*'))
 
-    svm_metrics = svm(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, cur_time_stamp, print_features)
+    svm_metrics = coeff_methods.model(SVM)
     print("end of support vector machine".center(50,'*'))
 
     plot_perm = perm_knn(X_train_scaled, y_train_encoded, cur_time_stamp, n_features_to_select, print_features)
     print("end of permutation importances with knn".center(50,'*'))
 
-    selected_features_chi2 = chi_2(X_train, y_train_encoded, X_test, cur_time_stamp, n_features_to_select, print_features)
+    stat_methods = StatisticBasedModels(X_train, y_train, X_test, y_test, cur_time_stamp, n_features_to_select, print_features=True, plot = True)
+    
+    selected_features_chi2 = stat_methods.stat_model(CHISQUARE)
     print("end of chi2 feature selection".center(50,'*'))
 
-    selected_features_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, cur_time_stamp, n_features_to_select, print_features)
+    selected_features_mutualinf = stat_methods.stat_model(MUTUALINFO)
     print("end of mutual information feature selection".center(50,'*'))
 
-    selected_features_anova = anova(X_train, y_train_encoded, X_test, cur_time_stamp, n_features_to_select, print_features)
+    selected_features_anova = stat_methods.stat_model(ANOVA)
     print("end of anova feature selection".center(50,'*'))
 
     categorical_corr(df, cur_time_stamp)

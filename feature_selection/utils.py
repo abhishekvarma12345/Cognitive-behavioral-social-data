@@ -100,7 +100,7 @@ def save_plot_sns(corr, filename, dir):
     plt.savefig(os.path.join(dir, filename))
 
 
-def princ_comp_anal(X, dir):
+def princ_comp_anal(X, dir, n_comp):
     pca = PCA().fit(X)
     fig = plt.figure(figsize=(15,10))
     plt.plot(np.cumsum(pca.explained_variance_ratio_))
@@ -108,7 +108,7 @@ def princ_comp_anal(X, dir):
     plt.ylabel('Cumulative explained variance')
     plt.savefig(os.path.join(dir, "pca.png"))
  
-    principal = PCA(n_components=2)
+    principal = PCA(n_components=n_comp)
     principal.fit(X)
     X_pca = principal.transform(X)
     
@@ -132,9 +132,9 @@ def compare_metrics(dict_full, dict_selected, model):
     print(model.center(50,'*'))
     
     for key in dict_full.keys():
-        dict_full[key] = [round(dict_full[key], 2), round(dict_selected[key], 2)] 
+        dict_full[key] = [round(dict_full[key], 2), round(dict_selected[key], 2), round(100*(dict_selected[key]-dict_full[key])/dict_full[key], 2)] 
 
     df = pd.DataFrame.from_dict(dict_full)
-    df["Features"] = ["All", "Selected"]
+    df["Features"] = ["All", "Selected", "Change (%)"]
 
     print(df.set_index("Features")) 

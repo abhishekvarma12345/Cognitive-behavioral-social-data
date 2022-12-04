@@ -18,8 +18,8 @@ if __name__ == '__main__':
                        ("11. DDDT", "RAW_DDDT.CSV"),("12. IADQ", "IADQ_df.csv"),("13. BF_1", "BF_df_CTU.csv"), 
                        ("13. BF_2", "BF_df_OU.csv"), ("13. BF_3", "BF_df_V.csv")]
     datasets_dir = os.path.join(os.getcwd(), 'Datasets')
-    folder_name = folders_and_files[5][0]
-    filename = folders_and_files[5][1]
+    folder_name = folders_and_files[15][0]
+    filename = folders_and_files[15][1]
     file_path = os.path.join(datasets_dir, folder_name, filename)
     df = read_data(file_path)
 
@@ -41,9 +41,11 @@ if __name__ == '__main__':
     assert y_train.value_counts().loc['H'] == y_train_encoded.value_counts().loc[1]
     
     print_features = False
-    n_features_to_select = 2
+    n_features_to_select = int(0.2 * len(df.columns))
 
     # model training for feature selection
+
+    # Model dependent
     dtree_metrics = dtree(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
     print("end of decision tree".center(50,"*"))
 
@@ -58,6 +60,8 @@ if __name__ == '__main__':
 
     svm_metrics = svm(X_train_scaled, y_train_encoded, X_test_scaled, y_test_encoded, mydir, print_features)
     print("end of support vector machine".center(50,'*'))
+
+    # Model agnostic
 
     plot_perm = perm_knn(X_train_scaled, y_train_encoded, mydir, n_features_to_select, print_features)
     print("end of permutation importances with knn".center(50,'*'))
@@ -78,7 +82,7 @@ if __name__ == '__main__':
     print("end of uncertainty coefficients study".center(50,'*'))
 
     print("Start reduction of dimensionality using PCA".center(50,'*'))
-    X_pca = princ_comp_anal(X_train_scaled, mydir)
+    X_pca = princ_comp_anal(X_train_scaled, mydir, n_features_to_select)
 
     # Merge all different plots in one figure and save it
     merge_plots(mydir , "combined.png")
@@ -98,10 +102,10 @@ if __name__ == '__main__':
     print("end of xgboost".center(50,'*'))
 
     logreg_metrics_red = log_reg(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
-    print("end of xgboost".center(50,'*'))
+    print("end of logistic regression".center(50,'*'))
 
     svm_metrics_red = svm(X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features, plot = False)
-    print("end of xgboost".center(50,'*'))
+    print("end of support vector machine".center(50,'*'))
 
 
     # Compare metrics

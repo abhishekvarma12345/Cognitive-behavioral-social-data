@@ -43,10 +43,6 @@ def dtree(X, y, X_test, y_test, dir, print_features = True, plot = True):
     y_pred = model.predict(X_test)
     metrics_dict = get_metrics(y_test, y_pred)
 
-    # Print metrics
-    for k, v in metrics_dict.items():
-        print(k, ":", v)
-
     # get importances
     importance = model.feature_importances_
     # Print all feature scores
@@ -68,10 +64,6 @@ def rforest(X, y, X_test, y_test, dir, print_features = True, plot = True):
     # predict
     y_pred = model.predict(X_test)
     metrics_dict = get_metrics(y_test, y_pred)
-
-    # Print metrics
-    for k, v in metrics_dict.items():
-        print(k, ":", v)
 
     # get importances
     importance = model.feature_importances_
@@ -95,10 +87,6 @@ def xgboost(X, y, X_test, y_test, dir, print_features = True, plot = True):
     y_pred = model.predict(X_test)
     metrics_dict = get_metrics(y_test, y_pred)
 
-    # Print metrics
-    for k, v in metrics_dict.items():
-        print(k, ":", v)
-        
     importance = model.feature_importances_
     # Print all feature scores
     if print_features:
@@ -146,7 +134,6 @@ def svm(X, y, X_test, y_test, dir, print_features = True, plot = True):
     importance = model.coef_[0]
     # Print all feature scores
     if print_features:
-
         for k,v in zip(X.columns, importance):
             print('Feature', k, ':', round(v,2))
 
@@ -157,7 +144,7 @@ def svm(X, y, X_test, y_test, dir, print_features = True, plot = True):
     return metrics_dict
 
 
-def perm_knn(X,y, dir, n_features_to_select, print_features = True):
+def perm_knn(X,y, X_test, dir, n_features_to_select, print_features = True):
     # define the model
     model = KNeighborsClassifier()
     # fit the model

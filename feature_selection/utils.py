@@ -100,15 +100,15 @@ def save_plot_sns(corr, filename, dir):
     plt.savefig(os.path.join(dir, filename))
 
 
-def princ_comp_anal(X, dir):
+def princ_comp_anal(X, dir, n_comp):
     pca = PCA().fit(X)
     fig = plt.figure(figsize=(15,10))
     plt.plot(np.cumsum(pca.explained_variance_ratio_))
     plt.xlabel('Number of components')
     plt.ylabel('Cumulative explained variance')
-    plt.savefig(os.path.join(dir, "pca.png"))
+    plt.savefig(os.path.join(dir, "pca.png"), dpi = 1200)
  
-    principal = PCA(n_components=2)
+    principal = PCA(n_components=n_comp)
     principal.fit(X)
     X_pca = principal.transform(X)
     
@@ -128,13 +128,203 @@ def get_metrics(y_test, y_pred):
     return metrics_dict
 
 
-def compare_metrics(dict_full, dict_selected, model):
-    print(model.center(50,'*'))
+def compare_metrics(dict_full, dict_selected, model, show_metrics = True):
     
+    new_dict = {}
+
     for key in dict_full.keys():
-        dict_full[key] = [round(dict_full[key], 2), round(dict_selected[key], 2)] 
+        new_dict[key] = [round(dict_full[key], 2), round(dict_selected[key], 2), round(100*(dict_selected[key]-dict_full[key])/dict_full[key], 2)] 
 
-    df = pd.DataFrame.from_dict(dict_full)
-    df["Features"] = ["All", "Selected"]
+    df = pd.DataFrame.from_dict(new_dict)
+    df["Features"] = ["All", "Selected", "Change (%)"]
 
-    print(df.set_index("Features")) 
+    if show_metrics:
+        print(df.set_index("Features")) 
+
+    return df["Accuracy"].iloc[2]
+
+
+
+
+def bar_plot(df, dir, filename):
+    
+    df_grouped = df.groupby(by=['CONDITION'], as_index = False).mean()
+
+    df_to_plot = pd.DataFrame({
+    'Columns': df_grouped.columns[1:],
+    'H': df_grouped[df_grouped['CONDITION'] == 'H'].values.flatten().tolist()[1:],
+    'D': df_grouped[df_grouped['CONDITION'] == 'D'].values.flatten().tolist()[1:]
+    })
+
+    fig, ax = plt.subplots(figsize=(12, 10))  
+    ax = df_to_plot.plot.bar(x = 'Columns' , y = ['H','D'] , rot=0, xlabel = "Features")
+    plt.savefig(os.path.join(dir, filename), dpi = 1200)
+
+
+
+def how_many_common(selected_feat_list):
+
+    l = selected_feat_list[0]
+
+    for feat_list in selected_feat_list[1:]:
+        l = list(set(l).intersection(feat_list))
+
+    print(f"Out of {len(selected_feat_list[0])} selected features, the following {len(l)} are common to all methods: {l}")
+
+
+
+
+def model_accuracy_comparison(X_train_scaled, X_test_scaled, y_train_encoded,
+                              y_test_encoded, mydir, dtree_metrics, rforest_metrics,
+                              xgboost_metrics, logreg_metrics, svm_metrics, selector,
+                              models, n_features_list, n_features_to_select):
+    
+    acc_tree, acc_for, acc_xgb, acc_lr, acc_svm = [], [], [], [], []
+
+    for i in n_features_list:
+
+        selected_features = selector(X_train_scaled, y_train_encoded, X_test_scaled, mydir, i, print_features = False)
+        X_train_reduced = X_train_scaled.loc[:,selected_features]
+        X_test_reduced = X_test_scaled.loc[:,selected_features]
+
+        dtree_metrics_red = models[0](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+        rforest_metrics_red = models[1](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+        xgboost_metrics_red = models[2](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+        logreg_metrics_red = models[3](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+        svm_metrics_red = models[4](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+
+        acc_tree.append(compare_metrics(dtree_metrics, dtree_metrics_red, "Decision tree", show_metrics = False))
+        acc_for.append(compare_metrics(rforest_metrics, rforest_metrics_red, "Random Forest", show_metrics = False))
+        acc_xgb.append(compare_metrics(xgboost_metrics, xgboost_metrics_red, "XGBoost", show_metrics = False))
+        acc_lr.append(compare_metrics(logreg_metrics, logreg_metrics_red, "Logistic regression", show_metrics = False))
+        acc_svm.append(compare_metrics(svm_metrics, svm_metrics_red, "Support vector machine", show_metrics = False))
+
+
+
+    name_plot = str(selector).split(' ')[1] + "_behavior_number_features.png"
+    fig = plt.figure(figsize=(12,8))
+    plt.plot(n_features_list, acc_tree, label = "Decision tree", marker='.')
+    plt.plot(n_features_list, acc_for, label = "Random forest", marker='.')
+    plt.plot(n_features_list, acc_xgb, label = "XGBoost", marker='.')
+    plt.plot(n_features_list, acc_lr, label = "Logistic regression", marker='.')
+    plt.plot(n_features_list, acc_svm, label = "SVM", marker='.')
+    plt.axvline(x = n_features_to_select, color = 'k', linestyle='dashdot', alpha = 0.5)
+    plt.xlabel("Number of selected features")
+    plt.ylabel("Change in accuracy (%)")
+    plt.legend(prop={'size': 14})
+    plt.savefig(os.path.join(mydir, name_plot), dpi = 1200)
+
+
+
+def plot_heatmap(models, selection_methods, matrix, mydir):
+
+    fig, ax = plt.subplots(figsize=(12,8))
+    im = ax.imshow(matrix, cmap = 'Reds')
+    labels_selectors = [str(i).split(' ')[1] for i in selection_methods]
+    labels_models = [str(i).split(' ')[1] for i in models]
+
+    # Show all ticks and label them with the respective list entries
+    ax.set_xticks(np.arange(len(models)), labels=labels_models)
+    ax.set_yticks(np.arange(len(selection_methods)), labels=labels_selectors)
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+            rotation_mode="anchor")
+
+    # Loop over data dimensions and create text annotations.
+    for i in range(len(selection_methods)):
+        for j in range(len(models)):
+            text = ax.text(j, i, matrix[i, j],
+                        ha="center", va="center", color="r", size = 18)
+
+    ax.set_title("Change in accuracy (%)")
+    fig.tight_layout()
+    plt.savefig(os.path.join(mydir, "heatmap_accuracy"), dpi = 1200)
+
+
+
+def heatmap(X_train_scaled, X_test_scaled, y_train_encoded, 
+            y_test_encoded, mydir, dtree_metrics, rforest_metrics, 
+            xgboost_metrics, logreg_metrics, svm_metrics, 
+            selection_methods, models, selected_features_list):
+
+
+    # models = ['Decision tree', 'Random forest', 'XGBoost', 'Logistic regression', 'SVM']
+    matrix = np.zeros((len(selection_methods), len(models)))
+
+    for i in range(len(selection_methods)):
+
+        X_train_reduced = X_train_scaled.loc[:, selected_features_list[i]]
+        X_test_reduced = X_test_scaled.loc[:, selected_features_list[i]]
+
+        dtree_metrics_red = models[0](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+        rforest_metrics_red = models[1](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+        xgboost_metrics_red = models[2](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+        logreg_metrics_red = models[3](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+        svm_metrics_red = models[4](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+
+        matrix[i][0] = compare_metrics(dtree_metrics, dtree_metrics_red, "Decision tree", show_metrics = False)
+        matrix[i][1]= compare_metrics(rforest_metrics, rforest_metrics_red, "Random Forest", show_metrics = False)
+        matrix[i][2]= compare_metrics(xgboost_metrics, xgboost_metrics_red, "XGBoost", show_metrics = False)
+        matrix[i][3]= compare_metrics(logreg_metrics, logreg_metrics_red, "Logistic regression", show_metrics = False)
+        matrix[i][4]= compare_metrics(svm_metrics, svm_metrics_red, "Support vector machine", show_metrics = False)
+
+    # plot the heatmap
+    plot_heatmap(models, selection_methods, matrix, mydir)
+
+
+
+
+
+
+
+
+def mean_change_accuracy(X_train_scaled, X_test_scaled, y_train_encoded, 
+        y_test_encoded, mydir, dtree_metrics, rforest_metrics, 
+        xgboost_metrics, logreg_metrics, svm_metrics, 
+        selection_methods, models, n_features_list, n_features_to_select):
+
+    my_list_3 = []
+    for method in selection_methods:
+
+        my_list_2 = []
+        # acc_chi2, acc_mutinf, acc_anova, acc_perm = [], [], [], []
+
+        for i in n_features_list:   
+
+            selected_features = method(X_train_scaled, y_train_encoded, X_test_scaled, mydir, i, print_features = False)
+
+            X_train_reduced = X_train_scaled.loc[:, selected_features]
+            X_test_reduced = X_test_scaled.loc[:, selected_features]
+
+            dtree_metrics_red = models[0](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+            rforest_metrics_red = models[1](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+            xgboost_metrics_red = models[2](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+            logreg_metrics_red = models[3](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+            svm_metrics_red = models[4](X_train_reduced, y_train_encoded, X_test_reduced, y_test_encoded, mydir, print_features = False, plot = False)
+
+            my_list = [
+            compare_metrics(dtree_metrics, dtree_metrics_red, "Decision tree", show_metrics = False),
+            compare_metrics(rforest_metrics, rforest_metrics_red, "Random Forest", show_metrics = False),
+            compare_metrics(xgboost_metrics, xgboost_metrics_red, "XGBoost", show_metrics = False),
+            compare_metrics(logreg_metrics, logreg_metrics_red, "Logistic regression", show_metrics = False),
+            compare_metrics(svm_metrics, svm_metrics_red, "Support vector machine", show_metrics = False)
+            ]
+
+            avg = sum(my_list)/len(my_list)
+            my_list_2.append(avg)
+
+        my_list_3.append(my_list_2)
+
+
+    fig = plt.figure(figsize=(12,8))
+    plt.plot(n_features_list, my_list_3[0], label = "Chi2", marker='.')
+    plt.plot(n_features_list, my_list_3[1], label = "Mutual information", marker='.')
+    plt.plot(n_features_list, my_list_3[2], label = "Anova", marker='.')
+    plt.plot(n_features_list, my_list_3[3], label = "Permutation importance", marker='.')
+    plt.axvline(x = n_features_to_select, color = 'k', linestyle='dashdot', alpha = 0.5)
+    plt.xlabel("Number of selected features")
+    plt.ylabel("Mean change in accuracy (%)")
+    plt.legend(prop={'size': 16})
+    plt.savefig(os.path.join(mydir, "mean_change_in_accuracy.png"), dpi = 1200)
+

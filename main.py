@@ -2,9 +2,11 @@ import os
 from feature_selection.data_mngt import read_data, split_data
 from feature_selection.data_preprocessing import imbalance_check, label_encoding, scale_data
 from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff, anova, log_reg, svm
-from feature_selection.utils import princ_comp_anal
-from feature_selection.utils import merge_plots
-from feature_selection.utils import make_timestamp_dir, compare_metrics
+from feature_selection.utils import princ_comp_anal, how_many_common
+from feature_selection.utils import merge_plots, bar_plot, model_accuracy_comparison, heatmap
+from feature_selection.utils import make_timestamp_dir, compare_metrics, mean_change_accuracy
+import matplotlib.pyplot as plt
+import numpy as np
 
 ## follow PEP8 standards 
 # Class names must be camelcase (Ex: DataManagement)
@@ -23,8 +25,13 @@ if __name__ == '__main__':
     file_path = os.path.join(datasets_dir, folder_name, filename)
     df = read_data(file_path)
 
+
+
     # Make a time stamp directory where storing the plots
     mydir = make_timestamp_dir(folder_name)
+
+    # brief exploratory data analysis
+    bar_plot(df, mydir, 'bar_plot.png')
 
     # checking for class imbalance
     print("Imbalanced classes:",imbalance_check(df))
@@ -33,7 +40,7 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = split_data(df, threshold=0.8)
 
     # scaling data using standard scaler by default(use scaler="minmax" for minmax scaling)
-    X_train_scaled, X_test_scaled = scale_data(X_train, X_test)
+    X_train_scaled, X_test_scaled = scale_data(X_train, X_test, scaler = 'min_max')
     
     # encoding labels into 0 and 1
     y_train_encoded = label_encoding(y_train)
@@ -41,7 +48,8 @@ if __name__ == '__main__':
     assert y_train.value_counts().loc['H'] == y_train_encoded.value_counts().loc[1]
     
     print_features = False
-    n_features_to_select = int(0.2 * len(df.columns))
+    n_features_to_select = int(0.2 * (len(df.columns)-1))
+    n_features_list = list(range(1,len(df.columns)))
 
     # model training for feature selection
 
@@ -63,7 +71,7 @@ if __name__ == '__main__':
 
     # Model agnostic
 
-    plot_perm = perm_knn(X_train_scaled, y_train_encoded, mydir, n_features_to_select, print_features)
+    selected_features_perm = perm_knn(X_train_scaled, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
     print("end of permutation importances with knn".center(50,'*'))
 
     selected_features_chi2 = chi_2(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
@@ -114,4 +122,49 @@ if __name__ == '__main__':
     compare_metrics(xgboost_metrics, xgboost_metrics_red, "XGBoost")
     compare_metrics(logreg_metrics, logreg_metrics_red, "Logistic regression")
     compare_metrics(svm_metrics, svm_metrics_red, "Support vector machine")
+
+
+
+#######################################################################################################################################################################################
+
+    selected_features_list = [selected_features_chi2, selected_features_mutualinf, selected_features_anova, selected_features_perm]
+    selection_methods = [chi_2, mutual_inf, anova, perm_knn]
+    models = [dtree, rforest, xgboost, log_reg, svm]
+
+
+    how_many_common(selected_features_list)
+
+    
+    heatmap(X_train_scaled, X_test_scaled, y_train_encoded, y_test_encoded, 
+            mydir, dtree_metrics, rforest_metrics, xgboost_metrics, 
+            logreg_metrics, svm_metrics, selection_methods, models,
+            selected_features_list)
+
+
+    for selector in selection_methods:
+        model_accuracy_comparison(X_train_scaled, X_test_scaled, y_train_encoded, y_test_encoded, 
+                                  mydir, dtree_metrics, rforest_metrics, xgboost_metrics, 
+                                  logreg_metrics, svm_metrics, selector, models, n_features_list,
+                                  n_features_to_select)
+    
+############################################################################################################################################################################################
+
+
+
+
+
+
+
+#############################################################################################################################################################################
+
+    mean_change_accuracy(X_train_scaled, X_test_scaled, y_train_encoded, 
+            y_test_encoded, mydir, dtree_metrics, rforest_metrics, 
+            xgboost_metrics, logreg_metrics, svm_metrics, 
+            selection_methods, models, n_features_list, n_features_to_select)
+
+
+    #######################################################################################################################################################################################
+
+
+
 

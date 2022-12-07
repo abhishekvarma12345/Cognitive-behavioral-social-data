@@ -53,7 +53,7 @@ def dtree(X, y, X_test, y_test, dir, print_features = True, plot = True):
     if plot:
         save_plot(X.columns, importance, 'dtree.png', dir)
 
-    return metrics_dict
+    return metrics_dict, importance
 
 
 def rforest(X, y, X_test, y_test, dir, print_features = True, plot = True):
@@ -75,7 +75,7 @@ def rforest(X, y, X_test, y_test, dir, print_features = True, plot = True):
     if plot:
         save_plot(X.columns, importance, 'rforest.png', dir)
 
-    return metrics_dict
+    return metrics_dict, importance
 
 
 def xgboost(X, y, X_test, y_test, dir, print_features = True, plot = True):
@@ -96,7 +96,7 @@ def xgboost(X, y, X_test, y_test, dir, print_features = True, plot = True):
     if plot:
         save_plot(X.columns, importance, 'xgboost.png', dir)
 
-    return metrics_dict
+    return metrics_dict, importance
 
 def log_reg(X, y, X_test, y_test, dir, print_features = True, plot = True):
     
@@ -118,7 +118,7 @@ def log_reg(X, y, X_test, y_test, dir, print_features = True, plot = True):
     if plot:
         save_plot(X.columns, importance, 'log_reg.png', dir)
 
-    return metrics_dict
+    return metrics_dict, importance
 
 
 def svm(X, y, X_test, y_test, dir, print_features = True, plot = True):
@@ -141,7 +141,7 @@ def svm(X, y, X_test, y_test, dir, print_features = True, plot = True):
     if plot:
         save_plot(X.columns, importance, 'svm.png', dir)
 
-    return metrics_dict
+    return metrics_dict, importance
 
 
 def perm_knn(X,y, X_test, dir, n_features_to_select, print_features = True):

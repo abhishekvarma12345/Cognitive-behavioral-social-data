@@ -90,7 +90,7 @@ if __name__ == '__main__':
     print("end of uncertainty coefficients study".center(50,'*'))
 
     print("Start reduction of dimensionality using PCA".center(50,'*'))
-    X_pca = princ_comp_anal(X_train_scaled, mydir, n_features_to_select)
+    selected_pca = princ_comp_anal(X_train_scaled, mydir, n_features_to_select)
 
     # Merge all different plots in one figure and save it
     merge_plots(mydir , "combined.png")
@@ -127,8 +127,8 @@ if __name__ == '__main__':
 
 #######################################################################################################################################################################################
 
-    selected_features_list = [selected_features_chi2, selected_features_mutualinf, selected_features_anova, selected_features_perm]
-    selection_methods = [chi_2, mutual_inf, anova, perm_knn]
+    selected_features_list = [selected_features_chi2, selected_features_mutualinf, selected_features_anova, selected_features_perm, selected_pca]
+    selection_methods = [chi_2, mutual_inf, anova, perm_knn, princ_comp_anal]
     models = [dtree, rforest, xgboost, log_reg, svm]
 
 
@@ -147,15 +147,6 @@ if __name__ == '__main__':
                                   logreg_metrics, svm_metrics, selector, models, n_features_list,
                                   n_features_to_select)
     
-############################################################################################################################################################################################
-
-
-
-
-
-
-
-#############################################################################################################################################################################
 
     mean_change_accuracy(X_train_scaled, X_test_scaled, y_train_encoded, 
             y_test_encoded, mydir, dtree_metrics, rforest_metrics, 

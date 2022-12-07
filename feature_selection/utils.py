@@ -100,22 +100,37 @@ def save_plot_sns(corr, filename, dir):
     plt.savefig(os.path.join(dir, filename))
 
 
-def princ_comp_anal(X, dir, n_comp):
+def princ_comp_anal(X, dir, n_features):
     pca = PCA().fit(X)
+
     fig = plt.figure(figsize=(15,10))
-    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    plt.plot(np.cumsum(pca.explained_variance_ratio_), marker = '.')
     plt.xlabel('Number of components')
     plt.ylabel('Cumulative explained variance')
     plt.savefig(os.path.join(dir, "pca.png"), dpi = 1200)
- 
+
+    n_comp = (np.where(np.cumsum(pca.explained_variance_ratio_) > 0.8))[0][0]
+
     principal = PCA(n_components=n_comp)
     principal.fit(X)
     X_pca = principal.transform(X)
-    
-    # Check the dimensions of data after PCA
-    print("New dimension of data: ", X_pca.shape)
 
-    return X_pca
+    # correlation matrix
+    X_pca = pd.DataFrame(X_pca)
+    cols = X.columns
+    cols_pca = X_pca.columns
+    corrM = np.zeros((len(cols), len(cols_pca)))
+
+    for i in range(len(cols)):
+        for j in range(len(cols_pca)):
+            corr = X.iloc[:,i].corr(X_pca.iloc[:,j])
+            corrM[i][j] = corr
+
+    corrM = np.abs(corrM)
+    max_row = np.amax(corrM, axis = 1)
+    max = np.argsort(max_row)[-n_features:]
+
+    return list(cols[max])
 
 
 def get_metrics(y_test, y_pred):
@@ -183,7 +198,11 @@ def model_accuracy_comparison(X_train_scaled, X_test_scaled, y_train_encoded,
 
     for i in n_features_list:
 
-        selected_features = selector(X_train_scaled, y_train_encoded, X_test_scaled, mydir, i, print_features = False)
+        if str(selector).split(' ')[1] == 'princ_comp_anal':
+            selected_features = selector(X_train_scaled, mydir, i)
+        else:
+            selected_features = selector(X_train_scaled, y_train_encoded, X_test_scaled, mydir, i, print_features = False)
+        
         X_train_reduced = X_train_scaled.loc[:,selected_features]
         X_test_reduced = X_test_scaled.loc[:,selected_features]
 
@@ -235,7 +254,7 @@ def plot_heatmap(models, selection_methods, matrix, mydir):
     for i in range(len(selection_methods)):
         for j in range(len(models)):
             text = ax.text(j, i, matrix[i, j],
-                        ha="center", va="center", color="r", size = 18)
+                        ha="center", va="center", color="k", size = 20)
 
     ax.set_title("Change in accuracy (%)")
     fig.tight_layout()
@@ -252,7 +271,7 @@ def heatmap(X_train_scaled, X_test_scaled, y_train_encoded,
     # models = ['Decision tree', 'Random forest', 'XGBoost', 'Logistic regression', 'SVM']
     matrix = np.zeros((len(selection_methods), len(models)))
 
-    for i in range(len(selection_methods)):
+    for i in range(len(selected_features_list)):
 
         X_train_reduced = X_train_scaled.loc[:, selected_features_list[i]]
         X_test_reduced = X_test_scaled.loc[:, selected_features_list[i]]
@@ -285,14 +304,17 @@ def mean_change_accuracy(X_train_scaled, X_test_scaled, y_train_encoded,
         selection_methods, models, n_features_list, n_features_to_select):
 
     my_list_3 = []
-    for method in selection_methods:
+    for selector in selection_methods:
 
         my_list_2 = []
         # acc_chi2, acc_mutinf, acc_anova, acc_perm = [], [], [], []
 
         for i in n_features_list:   
 
-            selected_features = method(X_train_scaled, y_train_encoded, X_test_scaled, mydir, i, print_features = False)
+            if str(selector).split(' ')[1] == 'princ_comp_anal':
+                selected_features = selector(X_train_scaled, mydir, i)
+            else:
+                selected_features = selector(X_train_scaled, y_train_encoded, X_test_scaled, mydir, i, print_features = False)
 
             X_train_reduced = X_train_scaled.loc[:, selected_features]
             X_test_reduced = X_test_scaled.loc[:, selected_features]
@@ -322,6 +344,7 @@ def mean_change_accuracy(X_train_scaled, X_test_scaled, y_train_encoded,
     plt.plot(n_features_list, my_list_3[1], label = "Mutual information", marker='.')
     plt.plot(n_features_list, my_list_3[2], label = "Anova", marker='.')
     plt.plot(n_features_list, my_list_3[3], label = "Permutation importance", marker='.')
+    plt.plot(n_features_list, my_list_3[4], label = "PCA", marker='.')
     plt.axvline(x = n_features_to_select, color = 'k', linestyle='dashdot', alpha = 0.5)
     plt.xlabel("Number of selected features")
     plt.ylabel("Mean change in accuracy (%)")

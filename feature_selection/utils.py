@@ -100,16 +100,16 @@ def save_plot_sns(corr, filename, dir):
     plt.savefig(os.path.join(dir, filename))
 
 
-def princ_comp_anal(X, dir, n_features):
-    pca = PCA().fit(X)
+def pca(X, dir, n_features):
+    p_c_a = PCA().fit(X)
 
     fig = plt.figure(figsize=(15,10))
-    plt.plot(np.cumsum(pca.explained_variance_ratio_), marker = '.')
+    plt.plot(np.cumsum(p_c_a.explained_variance_ratio_), marker = '.')
     plt.xlabel('Number of components')
     plt.ylabel('Cumulative explained variance')
     plt.savefig(os.path.join(dir, "pca.png"), dpi = 1200)
 
-    n_comp = (np.where(np.cumsum(pca.explained_variance_ratio_) > 0.8))[0][0]
+    n_comp = (np.where(np.cumsum(p_c_a.explained_variance_ratio_) > 0.8))[0][0]
 
     principal = PCA(n_components=n_comp)
     principal.fit(X)
@@ -177,7 +177,7 @@ def bar_plot(df, dir, filename):
 
 
 
-def how_many_common(selected_feat_list):
+def how_many_common(selected_feat_list, mydir):
 
     l = selected_feat_list[0]
 
@@ -185,6 +185,18 @@ def how_many_common(selected_feat_list):
         l = list(set(l).intersection(feat_list))
 
     print(f"Out of {len(selected_feat_list[0])} selected features, the following {len(l)} are common to all methods: {l}")
+
+    # Plot bar plot of frequencies
+    toghether = [elem for lst in selected_feat_list for elem in lst] 
+    counts = Counter(toghether)
+    df = pd.DataFrame.from_dict(counts, orient='index')
+
+    fig, ax = plt.subplots(figsize=(12, 10)) 
+    df.plot(kind='bar', rot=45, legend = False)
+    plt.xlabel("Selected features")
+    plt.ylabel("Frequency")
+    plt.tight_layout()
+    plt.savefig(os.path.join(mydir, "common_features"), dpi = 1200)
 
 
 def models_trn(X_train, y_train, X_test, y_test, mydir, models, print_fts, plot_or_not):
@@ -213,7 +225,7 @@ def model_accuracy_comparison(X_train_scaled, X_test_scaled, y_train_encoded,
 
     for i in n_features_list:
 
-        if str(selector).split(' ')[1] == 'princ_comp_anal':
+        if str(selector).split(' ')[1] == 'pca':
             selected_features = selector(X_train_scaled, mydir, i)
         else:
             selected_features = selector(X_train_scaled, y_train_encoded, X_test_scaled, mydir, i, print_features = False)
@@ -268,6 +280,8 @@ def plot_heatmap(models, selection_methods, matrix, mydir):
                         ha="center", va="center", color="k", size = 20)
 
     ax.set_title("Change in accuracy (%)")
+    ax.set_xlabel("Models")
+    ax.set_ylabel("Selection method")
     fig.tight_layout()
     plt.savefig(os.path.join(mydir, "heatmap_accuracy"), dpi = 1200)
 
@@ -314,7 +328,7 @@ def mean_change_accuracy(X_train_scaled, X_test_scaled, y_train_encoded,
 
         for i in n_features_list:   
 
-            if str(selector).split(' ')[1] == 'princ_comp_anal':
+            if str(selector).split(' ')[1] == 'pca':
                 selected_features = selector(X_train_scaled, mydir, i)
             else:
                 selected_features = selector(X_train_scaled, y_train_encoded, X_test_scaled, mydir, i, print_features = False)
@@ -362,7 +376,7 @@ def errorbars(df, mydir, filename):
     plt.xticks(rotation=45, ha='right')
     plt.legend(prop={'size': 12})
     plt.xlabel("Features")
-    plt.xlabel("Mean choice")
+    plt.ylabel("Mean choice")
     # plt.title(f"{dataset_name}")
     plt.savefig(os.path.join(mydir, filename), dpi = 1200)
 
@@ -385,7 +399,7 @@ def plot_stability_map(lst, mydir, columns, name):
     dataf = pd.DataFrame(lst_norm, columns = columns, index=Index, dtype = float)
 
     fig, ax = plt.subplots(figsize=(12, 10))
-    ax = sns.heatmap(dataf, annot=True, ax=ax, annot_kws={"size" : 10})
+    ax = sns.heatmap(dataf, annot=True, ax=ax, annot_kws={"size" : 10}, fmt='.2f')
     plt.title("Normalized Importance")
     plt.xlabel("Features")
     plt.ylabel("Models")

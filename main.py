@@ -2,7 +2,7 @@ import os
 from feature_selection.data_mngt import read_data, split_data
 from feature_selection.data_preprocessing import imbalance_check, label_encoding, scale_data
 from feature_selection.models import dtree, rforest, xgboost, perm_knn, chi_2, mutual_inf, categorical_corr, unc_coeff, anova, log_reg, svm
-from feature_selection.utils import princ_comp_anal, how_many_common, errorbars, plot_stability_map
+from feature_selection.utils import pca, how_many_common, errorbars, plot_stability_map
 from feature_selection.utils import merge_plots, bar_plot, model_accuracy_comparison, heatmap
 from feature_selection.utils import make_timestamp_dir, compare_metrics, mean_change_accuracy, models_trn
 import matplotlib.pyplot as plt
@@ -22,8 +22,8 @@ if __name__ == '__main__':
                        ("11. DDDT", "RAW_DDDT.CSV"),("12. IADQ", "IADQ_df.csv"),("13. BF_1", "BF_df_CTU.csv"), 
                        ("13. BF_2", "BF_df_OU.csv"), ("13. BF_3", "BF_df_V.csv")]
     datasets_dir = os.path.join(os.getcwd(), 'Datasets')
-    folder_name = folders_and_files[15][0]
-    filename = folders_and_files[15][1]
+    folder_name = folders_and_files[5][0]
+    filename = folders_and_files[5][1]
     file_path = os.path.join(datasets_dir, folder_name, filename)
     df = read_data(file_path)
 
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     #############################################################################################################################################
     models = [dtree, rforest, xgboost, log_reg, svm]
-    selection_methods = [chi_2, mutual_inf, anova, perm_knn, princ_comp_anal]
+    selection_methods = [chi_2, mutual_inf, anova, perm_knn, pca]
 
 
     # Model dependent. Classify and find importance of all features
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     selected_features_chi2 = chi_2(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
     selected_features_mutualinf = mutual_inf(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
     selected_features_anova = anova(X_train, y_train_encoded, X_test, mydir, n_features_to_select, print_features)
-    selected_pca = princ_comp_anal(X_train_scaled, mydir, n_features_to_select)
+    selected_pca = pca(X_train_scaled, mydir, n_features_to_select)
 
     # Merge all different plots in one figure and save it
     merge_plots(mydir , "combined.png")
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     plot_stability_map(importances_all_fts, mydir, df.columns[:-1] , "stability_all_features")
 
     # See stability after choosing 20% features with chi_2
-    plot_stability_map(importances_red_fts, mydir, selected_features_chi2, 'stability_%_features')
+    plot_stability_map(importances_red_fts, mydir, selected_features_chi2, 'stability_%_features') # this should be done for all selectors as well
 
 
     # Compare metrics
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
 
     # print the common features chosen by all selection methods
-    how_many_common(selected_features_list)
+    how_many_common(selected_features_list, mydir)
 
     # Plot change in accuracy after running the models with the chosen features
     heatmap(X_train_scaled, X_test_scaled, y_train_encoded, y_test_encoded, 
@@ -123,5 +123,9 @@ if __name__ == '__main__':
     mean_change_accuracy(X_train_scaled, X_test_scaled, y_train_encoded, 
             y_test_encoded, mydir, metrics_all_fts, 
             selection_methods, models, n_features_list, n_features_to_select)
+
+
+
+
 
 

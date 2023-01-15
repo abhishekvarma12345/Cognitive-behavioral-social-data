@@ -34,9 +34,27 @@ import numpy as np
 from itertools import combinations
 
 
-def dtree(X, y, X_test, y_test, dir, print_features = True, plot = True):
+def dtree(X, y, X_test, y_test, n_features_to_select, dir, df_n, print_features = True, plot = True):
+    """
+    This function fits a Decision Tree Classifier on the given train data, makes predictions 
+    on the test data, and returns the evaluation metrics, feature importances and selected feature names.
+    Parameters:
+    - X: pd.DataFrame : Dataframe containing the input features for training
+    - y: pd.Series : Series containing the target variable for training
+    - X_test: pd.DataFrame : Dataframe containing the input features for testing
+    - y_test: pd.Series : Series containing the target variable for testing
+    - n_features_to_select : int : number of feature to select
+    - dir : string : directory to save the plot
+    - print_features : bool : whether to print feature importance scores
+    - plot : bool : whether to plot feature importance scores
+    - df_n (int): number of the dataset
+    Returns:
+    - metrics_dict : dict : evaluation metrics
+    - importance : list : feature importance scores
+    - selected_feat_names : list : names of selected features
+    """
     # define the model
-    model = DecisionTreeClassifier()
+    model = DecisionTreeClassifier(random_state = 1)
     # fit the model
     model.fit(X, y)
     # predict
@@ -45,20 +63,44 @@ def dtree(X, y, X_test, y_test, dir, print_features = True, plot = True):
 
     # get importances
     importance = model.feature_importances_
+
+    dict_name_score = dict(zip(X.columns, importance))
+    max_scores = sorted(importance)[-n_features_to_select:]
+    selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
+
     # Print all feature scores
     if print_features:
         for k,v in zip(X.columns, importance):
             print('Feature', k, ':', round(v,2))
 
     if plot:
-        save_plot(X.columns, importance, 'dtree.png', dir)
+        save_plot(X.columns, importance, f'dtree_{df_n}.pdf', dir)
 
-    return metrics_dict, importance
+    return metrics_dict, importance, selected_feat_names
 
 
-def rforest(X, y, X_test, y_test, dir, print_features = True, plot = True):
+def rforest(X, y, X_test, y_test, n_features_to_select, dir, df_n, print_features = True, plot = True):
+    """
+    This function will train a Random Forest Classifier model on the input data, X and y and test it on 
+    X_test and y_test. It will also return the feature importance scores, selected_feat_names and metrics_dict.
 
-    model = RandomForestClassifier()
+    Parameters:
+    - X: input feature dataframe
+    - y: input label dataframe
+    - X_test: test feature dataframe
+    - y_test: test label dataframe
+    - n_features_to_select: number of features to select based on feature importance scores
+    - dir: directory to save the feature importance plot
+    - print_features: whether to print the feature importance scores or not
+    - plot: whether to save the feature importance plot or not
+    - df_n (int): number of the dataset
+
+    Returns:
+    - metrics_dict: A dictionary of evaluation metrics
+    - importance: importance of features
+    - selected_feat_names: names of features selected based on feature importance scores
+    """
+    model = RandomForestClassifier(random_state = 1)
     # fit the model
     model.fit(X, y)
     # predict
@@ -67,20 +109,42 @@ def rforest(X, y, X_test, y_test, dir, print_features = True, plot = True):
 
     # get importances
     importance = model.feature_importances_
+
+    dict_name_score = dict(zip(X.columns, importance))
+    max_scores = sorted(importance)[-n_features_to_select:]
+    selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
+
     # Print all feature scores
     if print_features:
         for k,v in zip(X.columns, importance):
             print('Feature', k, ':', round(v,2))
 
     if plot:
-        save_plot(X.columns, importance, 'rforest.png', dir)
+        save_plot(X.columns, importance, f'rforest_{df_n}.pdf', dir)
 
-    return metrics_dict, importance
+    return metrics_dict, importance, selected_feat_names
 
 
-def xgboost(X, y, X_test, y_test, dir, print_features = True, plot = True):
+def xgb(X, y, X_test, y_test, n_features_to_select, dir, df_n, print_features = True, plot = True):
+    """
+    Function to train, predict and get feature importances of XGBoost model.
+
+    Parameters:
+    - X (DataFrame): Training dataframe.
+    - y (Series): Target variable.
+    - X_test (DataFrame): Test dataframe.
+    - y_test (Series): Target variable of test dataframe.
+    - n_features_to_select (int): number of features to select.
+    - dir (str): directory where the plots will be saved.
+    - print_features (bool): flag to decide whether to print feature importances or not.
+    - plot (bool): flag to decide whether to save feature importance plot or not.
+    - df_n (int): number of the dataset
+
+    Returns:
+    - tuple: metrics_dict, importance, selected_feat_names
+    """
     # define the model
-    model = XGBClassifier()
+    model = XGBClassifier(random_state = 1)
     # fit the model
     model.fit(X, y)
     # predict
@@ -88,20 +152,45 @@ def xgboost(X, y, X_test, y_test, dir, print_features = True, plot = True):
     metrics_dict = get_metrics(y_test, y_pred)
 
     importance = model.feature_importances_
+
+    dict_name_score = dict(zip(X.columns, importance))
+    max_scores = sorted(importance)[-n_features_to_select:]
+    selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
+
     # Print all feature scores
     if print_features:
         for k,v in zip(X.columns, importance):
             print('Feature', k, ':', round(v,2))
 
     if plot:
-        save_plot(X.columns, importance, 'xgboost.png', dir)
+        save_plot(X.columns, importance, f'xgboost_{df_n}.pdf', dir)
 
-    return metrics_dict, importance
+    return metrics_dict, importance, selected_feat_names
 
-def log_reg(X, y, X_test, y_test, dir, print_features = True, plot = True):
-    
+def log_reg(X, y, X_test, y_test, n_features_to_select, dir, df_n, print_features = True, plot = True):
+    """
+    This function applies logistic regression to the input dataset and returns the metrics, importance 
+    and selected features names
+
+    Parameters:
+    - X: array-like
+    - y: array-like
+    - X_test: array-like
+    - y_test: array-like
+    - n_features_to_select : int
+    - dir : str
+    - print_features : bool, default True
+    - plot : bool, default True
+    - df_n (int): number of the dataset
+
+    Returns:
+    - metrics_dict : dict
+    - importance : array-like
+    - selected_feat_names : list
+    """
+
     # define the model
-    model = LogisticRegression()
+    model = LogisticRegression(random_state = 1)
     # fit the model
     model.fit(X, y)
     # predict
@@ -109,6 +198,11 @@ def log_reg(X, y, X_test, y_test, dir, print_features = True, plot = True):
     metrics_dict = get_metrics(y_test, y_pred)
 
     importance = model.coef_[0]
+
+    dict_name_score = dict(zip(X.columns, importance))
+    max_scores = sorted(importance)[-n_features_to_select:]
+    selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
+
     # Print all feature scores
     if print_features:
         for k,v in zip(X.columns, importance):
@@ -116,15 +210,45 @@ def log_reg(X, y, X_test, y_test, dir, print_features = True, plot = True):
 
     # plot feature importance
     if plot:
-        save_plot(X.columns, importance, 'log_reg.png', dir)
+        save_plot(X.columns, importance, f'log_reg_{df_n}.pdf', dir)
 
-    return metrics_dict, importance
+    return metrics_dict, importance, selected_feat_names
 
 
-def svm(X, y, X_test, y_test, dir, print_features = True, plot = True):
+def svm(X, y, X_test, y_test, n_features_to_select, dir, df_n, print_features = True, plot = True):
+    """
+    This function defines and fits a Support Vector Machine model, predicts the test set, and returns
+    the metrics, feature importances and the selected features.
 
+    Parameters:
+    - X : Dataframe
+    The training feature set
+    - y : Dataframe
+    The training target set
+    - X_test : Dataframe
+    The test feature set
+    - y_test : Dataframe
+    The test target set
+    - n_features_to_select : int
+    The number of top features to select
+    - dir : string
+    The directory where the feature importance plot will be saved
+    - print_features : boolean
+    Whether to print feature importances or not
+    - plot : boolean
+    Whether to save the feature importance plot or not
+
+    Returns:
+    - metrics_dict : dict
+    A dictionary containing the evaluation metrics of the model
+    - importance : array
+    A array containing the feature importances
+    - selected_feat_names : list
+    A list of the selected feature names
+    - df_n (int): number of the dataset
+    """
     # define the model
-    model = SVC(kernel = "linear")
+    model = SVC(kernel = "linear", random_state = 1)
     # fit the model
     model.fit(X, y)
     # predict
@@ -132,6 +256,11 @@ def svm(X, y, X_test, y_test, dir, print_features = True, plot = True):
     metrics_dict = get_metrics(y_test, y_pred)
 
     importance = model.coef_[0]
+
+    dict_name_score = dict(zip(X.columns, importance))
+    max_scores = sorted(importance)[-n_features_to_select:]
+    selected_feat_names = [k for k, v in dict_name_score.items() if v in max_scores]
+
     # Print all feature scores
     if print_features:
         for k,v in zip(X.columns, importance):
@@ -139,12 +268,27 @@ def svm(X, y, X_test, y_test, dir, print_features = True, plot = True):
 
     # plot feature importance
     if plot:
-        save_plot(X.columns, importance, 'svm.png', dir)
+        save_plot(X.columns, importance, f'svm_{df_n}.pdf', dir)
 
-    return metrics_dict, importance
+    return metrics_dict, importance, selected_feat_names
 
 
-def perm_knn(X,y, X_test, dir, n_features_to_select, print_features = True):
+def perm_knn(X,y, X_test, dir, n_features_to_select, df_n, print_features = True):
+    """
+    Perform permutation feature importance for a KNeighborsClassifier model.
+
+    Parameters:
+    - X (pd.DataFrame) : Dataframe containing the training data
+    - y (pd.Series) : Series containing the target variable
+    - X_test (pd.DataFrame) : Dataframe containing the test data
+    - dir (str) : directory to save the plot
+    - n_features_to_select (int) : number of features to select
+    - print_features (bool) : whether to print the feature importance scores or not
+    - df_n (int): number of the dataset
+
+    Returns:
+    - List : List of selected feature names
+    """
     # define the model
     model = KNeighborsClassifier()
     # fit the model
@@ -163,11 +307,26 @@ def perm_knn(X,y, X_test, dir, n_features_to_select, print_features = True):
         for i,v in enumerate(importance):
             print('Feature: %0d, Score: %.5f' % (i,v))
     # plot feature importance
-    save_plot(X.columns, importance, 'perm_knn.png', dir)
+    save_plot(X.columns, importance, f'perm_knn_{df_n}.pdf', dir)
     return selected_feat_names 
 
  
-def chi_2(X_train, y_train, X_test, dir, n_features_to_select, print_features = True):
+def chi_2(X_train, y_train, X_test, dir, n_features_to_select, df_n, print_features = True):
+    """
+    Select the best features using chi-squared test
+
+    Parameters:
+    - X_train (DataFrame): Training data
+    - y_train (Series): Target variable for training data
+    - X_test (DataFrame): Test data
+    - dir (str): directory where the plot will be saved
+    - n_features_to_select (int): number of features to select
+    - print_features (bool): whether to print the feature scores or not
+    - df_n (int): number of the dataset
+
+    Returns:
+    - list : list of selected feature names
+    """
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, chi2)
 
@@ -181,11 +340,26 @@ def chi_2(X_train, y_train, X_test, dir, n_features_to_select, print_features = 
             print('Feature', k, ':', round(v,2))
 
     # plot the scores
-    save_plot(X_train.columns, fs.scores_, 'chi_2.png', dir)
+    save_plot(X_train.columns, fs.scores_, f'chi_2_{df_n}.pdf', dir)
     return selected_feat_names
 
 
-def mutual_inf(X_train, y_train, X_test, dir, n_features_to_select, print_features = True):
+def mutual_inf(X_train, y_train, X_test, dir, n_features_to_select, df_n, print_features = True):
+    """
+    Calculate mutual information and select features using mutual_info_classif method
+
+    Parameters:
+    X_train (DataFrame): training set of features
+    y_train (Series): training set of target
+    X_test (DataFrame): test set of features
+    dir (str): directory to save the plot of feature importance
+    n_features_to_select (int): number of top important features to select
+    print_features (bool): print the feature importance scores if set to True
+    - df_n (int): number of the dataset
+
+    Returns:
+    list : list of selected feature names
+    """
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, mutual_info_classif)
     
@@ -200,11 +374,22 @@ def mutual_inf(X_train, y_train, X_test, dir, n_features_to_select, print_featur
             print('Feature', k, ':', round(v,2))
 
     # plot the scores
-    save_plot(X_train.columns, fs.scores_, 'mutual_inf.png', dir)
+    save_plot(X_train.columns, fs.scores_, f'mutual_inf_{df_n}.pdf', dir)
     return selected_feat_names
 
 
-def categorical_corr(df, dir):
+def categorical_corr(df, dir, df_n):
+    """
+    calculate correlation between categorical variables
+
+    Parameters:
+    - df (DataFrame): Dataframe containing the data
+    - dir (str): path to save the plot
+    - df_n (int): number of the dataset
+
+    Returns:
+    - None
+    """
     cols = df.columns
     corrM = np.zeros((len(cols),len(cols)))
     for col1, col2 in combinations(cols, 2):
@@ -213,10 +398,23 @@ def categorical_corr(df, dir):
         corrM[idx2, idx1] = corrM[idx1, idx2]
 
     corr = pd.DataFrame(corrM, index=cols, columns=cols)
-    save_plot_sns(corr, 'categorical_correlation.png', dir)
+    save_plot_sns(corr, f'categorical_correlation_{df_n}.pdf', dir)
 
 
-def unc_coeff(df, dir):
+def unc_coeff(df, dir, df_n):
+    """
+    Calculate Cramer's corrected V correlation coefficient between each pair of 
+    categorical variables in a dataframe.
+
+    Parameters:
+    - df (DataFrame): Dataframe containing the data
+    - dir (str): the directory where the plots will be saved
+    - df_n (int): number of the dataset
+
+    Returns:
+    - None
+    """
+
     cols = df.columns
     corrM = np.zeros((len(cols),len(cols)))
     for col1, col2 in combinations(cols, 2):
@@ -225,9 +423,24 @@ def unc_coeff(df, dir):
         corrM[idx2, idx1] = corrM[idx1, idx2]
 
     corr = pd.DataFrame(corrM, index=cols, columns=cols)
-    save_plot_sns(corr, 'uncertainty_coefficients.png', dir)
+    save_plot_sns(corr, f'uncertainty_coefficients_{df_n}.pdf', dir)
 
-def anova(X_train, y_train, X_test, dir, n_features_to_select, print_features = True):
+def anova(X_train, y_train, X_test, dir, n_features_to_select, df_n, print_features = True):
+    """
+    Function to perform ANOVA feature selection and return the selected feature names.
+
+    Parameters:
+    - X_train : pd.DataFrame, training set features
+    - y_train : pd.DataFrame, training set target
+    - X_test : pd.DataFrame, testing set features
+    - dir : str, directory to save plot
+    - n_features_to_select : int, number of features to select
+    - print_features : bool, whether to print feature scores or not (default: True)
+    - df_n (int): number of the dataset
+
+    Returns:
+    - selected_feat_names : list of selected feature names
+    """
     # feature selection
     X_train_fs, X_test_fs, fs = select_features(X_train, y_train, X_test, f_classif)
 
@@ -241,7 +454,7 @@ def anova(X_train, y_train, X_test, dir, n_features_to_select, print_features = 
             print('Feature', k, ':', round(v,2))
 
     # plot the scores
-    save_plot(X_train.columns, fs.scores_, 'anova.png', dir)
+    save_plot(X_train.columns, fs.scores_, f'anova_{df_n}.pdf', dir)
     return selected_feat_names
 
 

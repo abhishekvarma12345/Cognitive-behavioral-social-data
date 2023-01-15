@@ -6,10 +6,25 @@ from sklearn.model_selection import train_test_split
 SEED = 23
 
 def read_data(file_path):
+    """
+    Read data from a csv file
+    Parameters:
+    - file_path (str): path to the csv file
+    Returns:
+    - DataFrame : Dataframe containing the data
+    """
     df = pd.read_csv(file_path,sep=";")
     return df
 
 def split_data(data:pd.DataFrame, threshold=0.8):
+    """
+    Split data into train and test sets
+    Parameters:
+    - data (DataFrame): Dataframe containing the dataset
+    - threshold (float): Threshold to split the data. Default is 0.8
+    Returns:
+    - X_train, X_test, y_train, y_test : Splitted data
+    """
     X = data.drop(["CONDITION"], axis=1)
     y = data['CONDITION']
 

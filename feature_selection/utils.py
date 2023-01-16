@@ -44,7 +44,7 @@ def save_plot(columns, feature_importances, filename, dir):
     plt.bar(columns, feature_importances)
     plt.xlabel("Features", fontsize = 25)
     plt.ylabel("Feature importance", fontsize = 25)
-    plt.xticks(fontsize = 20)
+    plt.xticks(fontsize = 20, rotation = 45)
     plt.yticks(fontsize = 20)
     plt.tight_layout()
     plt.savefig(os.path.join(dir, filename), dpi = 500)

@@ -1,0 +1,23 @@
+Steps to run the code:
+1. Mandatory requirements - Anaconda Distribution and optional requirement - VScode
+
+2. Open the terminal and create a new conda environment
+command: conda create -p venv python==3.8 -y
+
+3. Activate the conda environment
+command: conda activate ./venv
+
+4. To install the requirements needed for the project
+command: pip install -r requirements.txt
+
+5. Running the main.py file
+command: python main.py
+
+6. Select from the menu provided for which dataset you are desired to get the results and
+the percentage of features to be selected. 
+
+7. You can check the graphs of all feature selection and Machine Learning feature selection
+and other important results in the "artifacts" directory inside the "feature_selection" folder.
+
+8. For each dataset and each run of the program results are segregated into seperate folders with
+the respective time stamp for run of the program.
